@@ -1,0 +1,2 @@
+msttcorefonts
+font-manager

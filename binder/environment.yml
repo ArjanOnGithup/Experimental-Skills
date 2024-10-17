@@ -1,0 +1,51 @@
+name:
+  - ExperimentalSkills
+channels:
+  - conda-forge
+  - anaconda
+dependencies:
+  - beautifulsoup4
+  - blosc
+  - bokeh
+  - catboost
+  - conda
+  - conda-pack
+  - dask
+  - datashader
+  - fastparquet
+  - feather-format
+  - gdown
+  - gensim
+  - h5py
+  - html5lib
+  - ipython
+  - ipympl
+  - ipywidgets
+  - joblib
+  - jupyter
+  - jupyterlab
+  - lxml
+  - lz4
+  - matplotlib
+  - networkx
+  - numba
+  - numpy
+  - openpyxl
+  - pandas
+  - pillow
+  - plotly
+  - pyarrow
+  - pygwalker
+  - python
+  - pyxdf  
+  - requests
+  - scikit-image
+  - scikit-learn
+  - scipy
+  - seaborn
+  - snappy
+  - statsmodels
+  - xgboost
+  - xlrd
+  - xlwt
+  
