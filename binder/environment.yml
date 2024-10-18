@@ -18,6 +18,7 @@ dependencies:
   - gensim
   - h5py
   - html5lib
+  - htmltools
   - ipython
   - ipympl
   - ipywidgets
@@ -42,6 +43,7 @@ dependencies:
   - scikit-image
   - scikit-learn
   - scipy
+  - shiny
   - seaborn
   - snappy
   - statsmodels
