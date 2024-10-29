@@ -1,4 +1,123 @@
-from .DraggableVLine import DraggableVLine
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+class DraggableVLine:
+    """
+    A class to manage a vertical line on a Matplotlib plot that can be dragged along the x-axis.
+
+    This class provides interactivity for vertical lines in Matplotlib, allowing users to click 
+    and drag the line along the x-axis. When the line is dragged, an optional callback function 
+    can be triggered to handle updates or additional processing related to the new line position.
+
+    Attributes:
+    -----------
+    line : matplotlib.lines.Line2D
+        The vertical line to be made draggable.
+    press : float or None
+        Stores the x-coordinate where the mouse was pressed, used to determine the start of dragging.
+    on_drag_callback : function or None
+        A function to be called when the line drag ends, with the new x-coordinate passed as an argument.
+    
+    Methods:
+    --------
+    connect():
+        Connects the event listeners for mouse press, motion, and release.
+    on_press(event):
+        Handles the mouse press event. Records the x-coordinate if the event occurs on the line.
+    on_motion(event):
+        Handles the mouse motion event. Updates the line's position as the mouse is dragged.
+    on_release(event):
+        Handles the mouse release event. Finalizes the drag and triggers the callback if provided.
+    """
+    
+    def __init__(self, line, on_drag_callback=None):
+        """
+        Initializes a DraggableVLine instance.
+
+        Parameters:
+        -----------
+        line : matplotlib.lines.Line2D
+            The vertical line to be made draggable.
+        on_drag_callback : function, optional
+            A callback function that takes the new x-coordinate of the line as input.
+        """
+        self.line = line  # Reference to the matplotlib line object.
+        self.press = None  # Variable to track whether the line is being dragged.
+        self.on_drag_callback = on_drag_callback  # Optional callback function after drag.
+        self.connect()  # Connect the event listeners to the line.
+
+    def connect(self):
+        """
+        Connects the mouse event listeners (press, release, motion) to the line.
+
+        This method establishes connections between the mouse events and the corresponding event handlers.
+        The handlers are called whenever the user interacts with the plot.
+
+        Events:
+        -------
+        - button_press_event: Triggers when the mouse is pressed down.
+        - button_release_event: Triggers when the mouse button is released.
+        - motion_notify_event: Triggers when the mouse is moved.
+        """
+        self.cidpress = self.line.figure.canvas.mpl_connect('button_press_event', self.on_press)
+        self.cidrelease = self.line.figure.canvas.mpl_connect('button_release_event', self.on_release)
+        self.cidmotion = self.line.figure.canvas.mpl_connect('motion_notify_event', self.on_motion)
+
+    def on_press(self, event):
+        """
+        Handles the mouse press event.
+
+        Checks if the mouse press occurred on the draggable line. If so, records the x-coordinate
+        where the press occurred. If the press is outside the line's axes, or the press does not
+        occur on the line, nothing happens.
+
+        Parameters:
+        -----------
+        event : matplotlib.backend_bases.MouseEvent
+            The mouse event containing information about the mouse click.
+        """
+        if event.inaxes != self.line.axes:  # Ensure the press is within the plot axes.
+            return
+        contains, _ = self.line.contains(event)  # Check if the press occurred on the line.
+        if not contains:
+            return
+        self.press = event.xdata  # Store the x-coordinate where the press happened.
+
+    def on_motion(self, event):
+        """
+        Handles the mouse motion event.
+
+        Updates the line's position as the mouse is dragged, redrawing the plot with the new line position.
+        This only occurs if a press event has been registered (i.e., the line is currently being dragged),
+        and if the motion occurs within the plot's axes.
+
+        Parameters:
+        -----------
+        event : matplotlib.backend_bases.MouseEvent
+            The mouse event containing information about the mouse movement.
+        """
+        if self.press is None or event.inaxes != self.line.axes:  # Only drag if a press occurred.
+            return
+        self.line.set_xdata(event.xdata)  # Update the line's x-coordinate to follow the mouse.
+        self.line.figure.canvas.draw_idle()  # Redraw the canvas without blocking.
+
+    def on_release(self, event):
+        """
+        Handles the mouse release event.
+
+        Finalizes the drag action, resetting the press state and calling the optional callback function,
+        if provided, with the new x-coordinate of the line.
+
+        Parameters:
+        -----------
+        event : matplotlib.backend_bases.MouseEvent
+            The mouse event containing information about the mouse release.
+        """
+        self.press = None  # Reset the press state, ending the drag.
+        if self.on_drag_callback:
+            self.on_drag_callback(event.xdata)  # Trigger the callback with the final x-coordinate.
+        self.line.figure.canvas.draw_idle()  # Redraw the canvas to finalize the new position.
 
 class LineHandler:
     """
@@ -8,14 +127,12 @@ class LineHandler:
     Attributes:
         fig (matplotlib.figure.Figure): The matplotlib figure object.
         ax (matplotlib.axes.Axes): The axes of the plot.
-        x (np.ndarray): The x data of the plot.
-        y (np.ndarray): The y data of the plot.
         draggable_lines (list of DraggableVLine): List of draggable vertical lines on the plot.
         mode (str): The current interaction mode (e.g., 'drag', 'add', 'find').
         press (float or None): x-coordinate of the mouse press for region selection.
         shaded_area (matplotlib.patches.Polygon or None): Shaded region for actions like zoom or max-finding.
     """
-    def __init__(self, fig, ax, x, y):
+    def __init__(self, fig, ax, data):
         """
         Initialize the LineHandler with a figure, axes, and data.
 
@@ -25,10 +142,9 @@ class LineHandler:
             x (np.ndarray): The x-axis data.
             y (np.ndarray): The y-axis data.
         """
+        self.data = data # reference to the dataset object
         self.fig = fig  # Store the figure object.
         self.ax = ax  # Store the axes object.
-        self.x = x  # Store x data.
-        self.y = y  # Store y data.
         self.draggable_lines = []  # List to store all draggable lines.
         self.mode = 'drag'  # Default mode for interaction.
         self.press = None  # To track the press state (for region selection).
@@ -45,6 +161,15 @@ class LineHandler:
             alpha (float, optional): Transparency level of the line. Defaults to 0.3.
         """
         line = self.ax.axvline(x=xdata, color=color, linestyle='-', alpha=alpha)  # Create vertical line.
+        # add the new line to the data
+        
+        RTT = list(self.data.ecg.RTopTimes)
+        RTT.append(xdata)
+        RTT.sort()
+        
+        self.data.ecg.RTopTimes = pd.Series(RTT)
+        self.data.ecg.ibi = np.diff(self.data.ecg.RTopTimes)
+        
         draggable_line = DraggableVLine(line)  # Make the line draggable.
         self.draggable_lines.append(draggable_line)  # Store in the list.
         self.fig.canvas.draw_idle()  # Redraw the canvas.
@@ -82,7 +207,7 @@ class LineHandler:
             for line in self.draggable_lines:
                 line.on_press(event)
 
-        elif self.mode in ['find', 'zoom in', 'remove']:
+        elif self.mode in ['find', 'zoom', 'del']:
             self.press = event.xdata  # Store starting x-coordinate for region selection.
             if self.shaded_area:
                 self.shaded_area.remove()  # Remove previous shaded area, if any.
@@ -97,11 +222,19 @@ class LineHandler:
         Args:
             event (matplotlib.backend_bases.Event): The mouse motion event.
         """
-        if self.press is None or self.mode not in ['find', 'zoom in', 'remove']:
+        if self.press is None or self.mode not in ['find', 'zoom', 'del']:
             return  # Do nothing if no region is being selected.
+        if event.xdata is None:
+            return  # Ignore events outside the plot area.
+    
+        # If there's no shaded area yet, create one
+        if self.shaded_area is None:
+            color = 'green' if self.mode == 'find' else ('blue' if self.mode == 'zoom' else 'red')
+            self.shaded_area = self.ax.axvspan(self.press, event.xdata, color=color, alpha=0.3)
+        else:
+            # Update shaded region as the mouse moves.
+            self.shaded_area.set_xy([[self.press, 0], [self.press, 1], [event.xdata, 1], [event.xdata, 0]])
 
-        # Update shaded region as the mouse moves.
-        self.shaded_area.set_xy([[self.press, 0], [self.press, 1], [event.xdata, 1], [event.xdata, 0]])
         self.fig.canvas.draw_idle()  # Redraw the canvas.
 
     def on_release(self, event):
@@ -119,11 +252,11 @@ class LineHandler:
             start_x, end_x = sorted([self.press, event.xdata])  # Get the selected region.
             self._find_max_in_region(start_x, end_x)
 
-        elif self.mode == 'zoom in' and self.press is not None:
+        elif self.mode == 'zoom' and self.press is not None:
             start_x, end_x = sorted([self.press, event.xdata])
             self._zoom_in_region(start_x, end_x)
 
-        elif self.mode == 'remove' and self.press is not None:
+        elif self.mode == 'del' and self.press is not None:
             start_x, end_x = sorted([self.press, event.xdata])
             self._remove_lines_in_region(start_x, end_x)
 
@@ -141,13 +274,15 @@ class LineHandler:
             start_x (float): Starting x-coordinate of the region.
             end_x (float): Ending x-coordinate of the region.
         """
+        pass
+        """
         mask = (self.x >= start_x) & (self.x <= end_x)  # Mask for x-values in the selected region.
         if np.any(mask):
             x_in_region = self.x[mask]
             y_in_region = self.y[mask]
             max_x = x_in_region[np.argmax(y_in_region)]  # Find x corresponding to the max y.
             self.add_line(max_x, color='red')  # Add a red line at the maximum point.
-
+        """
     def _zoom_in_region(self, start_x, end_x):
         """
         Zoom into the selected x-region and adjust y-limits to fit the data.
@@ -156,11 +291,13 @@ class LineHandler:
             start_x (float): Starting x-coordinate of the zoom region.
             end_x (float): Ending x-coordinate of the zoom region.
         """
+        pass
+        """
         mask = (self.x >= start_x) & (self.x <= end_x)
         if np.any(mask):
             min_y, max_y = np.min(self.y[mask]), np.max(self.y[mask])
             self.update_plot_limits(start_x, end_x, min_y, max_y)
-
+        """
     def _remove_lines_in_region(self, start_x, end_x):
         """
         Remove all draggable lines within the selected x-region.

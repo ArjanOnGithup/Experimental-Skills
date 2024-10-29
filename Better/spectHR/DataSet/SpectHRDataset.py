@@ -2,7 +2,23 @@ import pandas as pd
 import numpy as np
 import pyxdf
 from datetime import datetime
-from .TimeSeries import TimeSeries
+
+class TimeSeries:
+    def __init__(self, x, y, srate=None):
+        self.time = pd.Series(x)
+        self.level = pd.Series(y)
+
+        if srate is not None:
+            self.srate = srate
+        else:
+            self.srate = round(1.0 / (self.time.diff().mean()))
+
+    def slicetime(self, time_min, time_max):
+        mask = (self.time >= time_min) & (self.time <= time_max)
+        return TimeSeries(self.time.loc[mask], self.level.loc[mask], self.srate)
+
+    def to_dataframe(self):
+        return pd.DataFrame({"time": self.time, "level": self.level, "srate": self.srate})
 
 class SpectHRDataset:
     def __init__(self, filename, ecg_index=1, br_index=None, event_index=None, par=None):
@@ -23,8 +39,7 @@ class SpectHRDataset:
             ecg_y = pd.Series(rawdata[ecg_index]["time_series"].flatten())
             ecg_x = ecg_x - self.starttime
             self.ecg = TimeSeries(ecg_x, ecg_y)
-            #self.ecg = self.ecg.slicetime(500,505)
-            #self.starttime = self.ecg.time.iloc[0]
+
             
         if br_index is not None:
             br_x = pd.Series(rawdata[br_index]["time_stamps"])
