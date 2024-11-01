@@ -32,6 +32,7 @@ class DraggableVLine:
         Args:
             event (matplotlib.backend_bases.Event): The mouse press event.
         """
+
         if self.line.contains(event)[0]:
             self.press = event.xdata
 
@@ -44,14 +45,14 @@ class DraggableVLine:
         """
         if self.press is None or event.inaxes != self.ax:
             return
-        
+            
         new_x = event.xdata
         self.line.set_xdata([new_x, new_x])
         plt.draw()
         
         # Callback with updated x-position if set
         if self.callback_drag:
-            self.callback_drag(self.line, new_x)
+            self.callback_drag(self, new_x)
 
     def on_release(self, event):
         """
@@ -60,6 +61,7 @@ class DraggableVLine:
         Args:
             event (matplotlib.backend_bases.Event): The mouse release event.
         """
+        
         self.press = None
 
     def connect(self, fig):
@@ -83,7 +85,7 @@ class LineHandler:
         callback_remove (callable): Function to call when a line is removed.
     """
     
-    def __init__(self, callback_add=None, callback_remove=None, callback_drag=None):
+    def __init__(self, fig, ax, callback_add=None, callback_remove=None, callback_drag=None):
         """
         Initializes LineHandler with an empty set of draggable lines and optional callbacks.
         
@@ -92,12 +94,13 @@ class LineHandler:
             callback_remove (callable, optional): Callback for when a line is removed.
             callback_drag (callable, optional): Callback for when a line is dragged.
         """
-        self.draggable_lines = set()
+        self.draggable_lines = []
         self.callback_add = callback_add
         self.callback_remove = callback_remove
         self.callback_drag = callback_drag
+        self.mode = 'Drag'
 
-    def add_line(self, ax, x_position):
+    def add_line(self, ax, x_position, color='red'):
         """
         Adds a draggable line at the specified x position without plotting it.
         
@@ -105,12 +108,10 @@ class LineHandler:
             ax (matplotlib.axes.Axes): The axes on which to add the line.
             x_position (float): The x-coordinate for the new line.
         """
-        line = DraggableVLine(ax, x_position, self.callback_drag)
-        self.draggable_lines.add(line)
-        line.connect(ax.figure)
+        line = DraggableVLine(ax, x_position, self.callback_drag, color=color)
+        line.connect(ax.figure) 
+        self.draggable_lines.append(line)
         
-        if self.callback_add:
-            self.callback_add(line)
 
     def remove_line(self, line):
         """
@@ -126,6 +127,9 @@ class LineHandler:
             
             if self.callback_remove:
                 self.callback_remove(line)
+                
+    def update_mode(self, mode):
+        self.mode = mode
 
 class AreaHandler:
     """
@@ -140,7 +144,7 @@ class AreaHandler:
         callback_find (callable): Callback function for 'find' mode.
     """
     
-    def __init__(self, ax, callback_del, callback_find):
+    def __init__(self, fig, ax, callback_del = None, callback_find = None):
         """
         Initializes the AreaHandler with callbacks for 'del' and 'find' actions.
         
@@ -164,8 +168,8 @@ class AreaHandler:
         Args:
             mode (str): The mode to set ('del' or 'find').
         """
-        if mode not in ('del', 'find'):
-            raise ValueError("Mode must be 'del' or 'find'.")
+        if mode not in ('Del', 'Find'):
+            raise ValueError("Mode must be 'Del' or 'Find'.")
         self.mode = mode
     
     def on_press(self, event):
@@ -210,9 +214,9 @@ class AreaHandler:
         self.end_x = event.xdata
         selected_range = (min(self.start_x, self.end_x), max(self.start_x, self.end_x))
         
-        if self.mode == 'del':
+        if self.mode == 'Del':
             self.callback_del(selected_range)
-        elif self.mode == 'find':
+        elif self.mode == 'Find':
             self.callback_find(selected_range)
         
         self.ax.patches.remove(self.patch)
