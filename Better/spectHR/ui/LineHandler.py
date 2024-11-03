@@ -48,11 +48,12 @@ class DraggableVLine:
             
         new_x = event.xdata
         self.line.set_xdata([new_x, new_x])
-        plt.draw()
         
         # Callback with updated x-position if set
         if self.callback_drag:
             self.callback_drag(self, new_x)
+            
+        plt.draw()
 
     def on_release(self, event):
         """
@@ -122,7 +123,7 @@ class LineHandler:
         """
         if line in self.draggable_lines:
             line.line.remove()  # Remove line from the plot
-            self.draggable_lines.discard(line)
+            #self.draggable_lines.discard(line)
             plt.draw()
             
             if self.callback_remove:

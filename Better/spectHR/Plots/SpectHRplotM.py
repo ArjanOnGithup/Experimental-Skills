@@ -1,15 +1,15 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-import ipywidgets as widgets
 import ipyvuetify as v
 from ..ui.LineHandler import LineHandler, AreaHandler
 import numpy as np
+from IPython.display import display
 
-def spectHRplot(data, x_min=None, x_max=None):
+def spectHRplotM(data, x_min=None, x_max=None):
     """
     Create an interactive plot for ECG and breathing rate data.
     """
-    v.theme.dark = False
+    v.theme.dark = True
     plt.ioff()
 
     # Set default x-axis limits if not provided
@@ -42,45 +42,52 @@ def spectHRplot(data, x_min=None, x_max=None):
 
         fig.canvas.draw_idle()  # Refresh the canvas
 
-    # Range slider for x-axis limits
-    x_range_slider = widgets.FloatRangeSlider(
-        value=[x_min, x_max],
+    # Replace the FloatRangeSlider with v.Slider for ipyvuetify
+    x_range_slider = v.RangeSlider(
+        v_model=[x_min, x_max],
         min=data.ecg.time.min(),
         max=data.ecg.time.max(),
         step=0.1,
-        description='X-Axis Range',
-        continuous_update=False,
-        layout=widgets.Layout(width='80%')  # Set slider width to 90%
+        class_="mt-4",
+        style_='width: 100%'
     )
 
-    # Center the slider
-    slider_box = widgets.HBox([widgets.Label(' ' * 15), x_range_slider])  # Adding space to center
-    slider_box.layout.justify_content = 'center'  # Center alignment
+    slider_box = v.Row(children=[
+        v.Flex(xs=2),  # Adds space on the left
+        x_range_slider,  # The slider
+        v.Flex(xs=1)  # Optional: Adds more space on the right if you want finer adjustment
+    ], style_="width: 100%;")
 
-    # Update plot based on slider values
-    def update_x_range(change):
+    # Observe the range slider to update plot based on slider values
+    def update_x_range(widget, event, data):
         nonlocal x_min, x_max
-        x_min, x_max = change['new']
+        x_min, x_max = widget.v_model
         update_plot(x_min, x_max)
 
-    x_range_slider.observe(update_x_range, names='value')  # Observe changes
+    x_range_slider.on_event('change', update_x_range)
 
-    # Mode selection dropdown
-    mode_select = widgets.Dropdown(
-        options=['Drag', 'Add', 'Find', 'Remove'],
-        value='Drag',
-        description='Mode:',
-        layout=widgets.Layout(width='200px')
+    # Replace Dropdown with v.Select for mode selection
+    mode_select = v.Select(
+        items=['Drag', 'Add', 'Find', 'Remove'],
+        v_model='Drag',
+        label="Mode",
+        class_="mt-4"
     )
 
     # Link dropdown selection to LineHandler mode
-    def update_mode(change):
-        line_handler.update_mode(change['new'])  # Update LineHandler mode
+    def update_mode(widget, event, data):
+        line_handler.update_mode(widget.v_model)  # Update LineHandler mode
 
-    mode_select.observe(update_mode, names='value')
+    mode_select.on_event('change', update_mode)
 
-    # Layout setup with VBox
-    control_box = widgets.VBox([mode_select, fig.canvas, slider_box])  # Use slider_box
+    # Use v.Container to arrange widgets in ipyvuetify
+    control_box = v.Container(
+        children=[
+            mode_select,
+            v.Html(tag="div", children=[fig.canvas]),  # Embed the matplotlib canvas
+            slider_box
+        ]
+    )
 
     # Display the control box
     display(control_box)
