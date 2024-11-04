@@ -3,3 +3,11 @@
 /Better/spectHR/__pycache__
 /Better/spectHR/ui/__pycache__
 /Better/spectHR/Plots/__pycache__
+/Better/spectHR/ui/__pycache__
+*.pyc
+*.pyc
+/Better/spectHR/ui/__pycache__
+/Better/spectHR/ui/.ipynb_checkpoints
+/Better/spectHR/Plots/.ipynb_checkpoints
+/Better/.ipynb_checkpoints
+/.ipynb_checkpoints
