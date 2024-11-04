@@ -21,6 +21,7 @@ dependencies:
   - htmltools
   - ipython
   - ipympl
+  - ipyvuetify
   - ipywidgets
   - joblib
   - jupyter
@@ -47,6 +48,7 @@ dependencies:
   - seaborn
   - snappy
   - statsmodels
+  - voila
   - xgboost
   - xlrd
   - xlwt
