@@ -100,7 +100,11 @@ class LineHandler:
         self.callback_remove = callback_remove
         self.callback_drag = callback_drag
         self.mode = 'Drag'
-
+        
+    def connect(self, fig):
+        for line in self.draggable_lines:
+            line.connect(fig)
+        
     def add_line(self, ax, x_position, color='red'):
         """
         Adds a draggable line at the specified x position without plotting it.

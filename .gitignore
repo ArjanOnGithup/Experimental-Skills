@@ -1,2 +1,5 @@
 
 *.pyc
+/Better/spectHR/__pycache__
+/Better/spectHR/ui/__pycache__
+/Better/spectHR/Plots/__pycache__
