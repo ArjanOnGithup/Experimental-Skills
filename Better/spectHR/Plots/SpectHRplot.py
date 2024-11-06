@@ -7,7 +7,7 @@ import numpy as np
 
 def spectHRplot(data, x_min=None, x_max=None):
     """
-    Plot the spectrogram and heart rate data with interactive features for zooming, 
+    Plot the heart rate data with interactive features for zooming, 
     dragging lines, and selecting modes for adding, removing, or finding R-top times.
 
     Parameters:
@@ -40,6 +40,7 @@ def spectHRplot(data, x_min=None, x_max=None):
     # Initialize LineHandler for managing R-top times and AreaHandler for shaded regions
     line_handler = LineHandler(fig, ax_ecg, callback_drag=update_rtop_times)
     area_handler = AreaHandler(fig, ax_ecg)
+    positional_patch  = plot_overview(ax_overview, data.ecg.time, data.ecg.level,  x_min, x_max)
 
     def update_plot(x_min, x_max):
         """
@@ -50,8 +51,8 @@ def spectHRplot(data, x_min=None, x_max=None):
         - x_min (float): Minimum x-axis limit for the zoomed view.
         - x_max (float): Maximum x-axis limit for the zoomed view.
         """
+        
         plot_ecg_signal(ax_ecg, data.ecg.time, data.ecg.level)
-        plot_overview(ax_overview, data.ecg.time, data.ecg.level, x_min, x_max)
         if hasattr(data.ecg, 'RTopTimes'):
             plot_rtop_times(ax_ecg, data.ecg.RTopTimes, x_min, x_max, line_handler)
         set_ecg_plot_properties(ax_ecg, x_min, x_max)
@@ -59,12 +60,7 @@ def spectHRplot(data, x_min=None, x_max=None):
             plot_breathing_rate(ax_br, data.br.time, data.br.level, x_min, x_max, line_handler)
         fig.canvas.draw_idle()
 
-    # Initialize a draggable patch for the overview plot
-    patch = patches.Rectangle((x_min, ax_overview.get_ylim()[0]),
-                              x_max - x_min, ax_overview.get_ylim()[1] - ax_overview.get_ylim()[0],
-                              color='gray', alpha=0.3)
-    ax_overview.add_patch(patch)
-
+ 
     # State variables for dragging
     drag_mode = None
     initial_xmin, initial_xmax = x_min, x_max
@@ -80,9 +76,9 @@ def spectHRplot(data, x_min=None, x_max=None):
             initial_xmin, initial_xmax = x_min, x_max
             dist = x_max - x_min
             # Determine drag mode based on proximity to the edges
-            if abs(event.xdata - x_min) < 0.1 * dist:
+            if abs(event.xdata - x_min) < 0.3 * dist:
                 drag_mode = 'left'
-            elif abs(event.xdata - x_max) < 0.1 * dist:
+            elif abs(event.xdata - x_max) < 0.3 * dist:
                 drag_mode = 'right'
             else:
                 drag_mode = 'center'
@@ -104,15 +100,15 @@ def spectHRplot(data, x_min=None, x_max=None):
             x_max = initial_xmax + dx
 
         # Update patch and plot properties
-        patch.set_x(x_min)
-        patch.set_width(x_max - x_min)
-        set_ecg_plot_properties(ax_ecg, x_min, x_max)
-        fig.canvas.draw_idle()
-
+        positional_patch.set_x(x_min)
+        positional_patch.set_width(x_max - x_min)
+    
     def on_release(event):
         """Reset dragging mode upon mouse release."""
         nonlocal drag_mode
         drag_mode = None
+        set_ecg_plot_properties(ax_ecg, x_min, x_max)
+        fig.canvas.draw_idle()
 
     # Connect the patch dragging events
     fig.canvas.mpl_connect('button_press_event', on_press)
@@ -171,14 +167,17 @@ def plot_overview(ax, ecg_time, ecg_level, x_min, x_max):
     """Plot ECG overview with a shaded region representing the zoomed area."""
     ax.clear()
     ax.plot(ecg_time, ecg_level, color='green')
-    patch = patches.Rectangle((x_min, ax.get_ylim()[0]), x_max - x_min,
-                              ax.get_ylim()[1] - ax.get_ylim()[0],
-                              color='gray', alpha=0.3)
-    ax.add_patch(patch)
+        # Initialize a draggable patch for the overview plot
+    positional_patch = patches.Rectangle((x_min, ax.get_ylim()[0]),
+                              x_max - x_min, ax.get_ylim()[1] - ax.get_ylim()[0],
+                              color='blue', alpha=0.2, animated = False)
+
+    ax.add_patch(positional_patch)
     ax.set_yticks([])  
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_visible(False)
+    return positional_patch
 
 def plot_rtop_times(ax, rtop_times, x_min, x_max, line_handler):
     """Plot vertical lines for R-top times within the current view."""
