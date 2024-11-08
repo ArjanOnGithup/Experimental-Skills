@@ -60,7 +60,7 @@ def calcPeaks(DataSet, par=None):
     correction = (post - pre) / par['fSample'] / 2.0 / np.abs(rc)
     
     # Print the number of detected R-tops for logging purposes
-    print(f"Found {len(locs)} r-tops")
+    # print(f"Found {len(locs)} r-tops")
 
     # Step 7: Update the dataset's RTopTimes with the time stamps corresponding to the detected peaks
     DS.ecg.RTopTimes = DS.ecg.time.iloc[locs] + correction
@@ -136,7 +136,7 @@ def filterECGData(DataSet, par=None):
     # Log the action
     DS.log_action('filterData', par)
 
-    print(f"Data filtered with a {par['filterType']} filter (cutoff = {par['cutoff']} Hz).")
+    #print(f"Data filtered with a {par['filterType']} filter (cutoff = {par['cutoff']} Hz).")
     return DS
 
 import copy
@@ -169,15 +169,13 @@ def borderData(DataSet, par=None):
         # Get the first and last event timestamps
         first_event_time = DS.events['timestamp'].iloc[0]-1
         last_event_time = DS.events['timestamp'].iloc[-1]+1
-        print(f'Slicing from {first_event_time} to {last_event_time}')
+        #print(f'Slicing from {first_event_time} to {last_event_time}')
         # Slice TimeSeries based on the first and last event times
         if DS.ecg is not None:
             DS.ecg = DS.ecg.slicetime(first_event_time, last_event_time)
 
         if DS.br is not None:
             DS.br = DS.br.slicetime(first_event_time, last_event_time)
-    else:
-        print(f'No events in this timeseries: no selection possible')
         
     return DS
     
@@ -234,6 +232,6 @@ def classify(DataSet, par=None):
     unique_ids = set(classID)
     for id in unique_ids:
         count = classID.count(id)
-        print(f"Found {count} {id} rtops")
+        #print(f"Found {count} {id} rtops")
 
     return DataSet.ecg.classID

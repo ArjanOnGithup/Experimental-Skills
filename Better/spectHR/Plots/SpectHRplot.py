@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import ipywidgets as widgets
-import ipyvuetify as v
+
 from ..ui.LineHandler import LineHandler, AreaHandler
 import numpy as np
 
@@ -21,15 +21,16 @@ def spectHRplot(data, x_min=None, x_max=None):
     - Mode selection for dragging, adding, finding, or removing R-top times.
     """
     # Configure theme
-    v.theme.dark = False
-    plt.ion()
-
+    plt.ioff()
+    plt.title('')
     # Initialize x-axis limits based on input or data
     x_min = x_min if x_min is not None else data.ecg.time.min()
     x_max = x_max if x_max is not None else data.ecg.time.max()
 
     # Create figure and axis handles
     fig, ax_ecg, ax_overview, ax_br = create_figure_axes(data)
+    fig.canvas.toolbar_visible = False
+    fig.tight_layout()
 
     # Callback to update R-top times upon dragging a line
     def update_rtop_times(line, new_x):
@@ -40,6 +41,7 @@ def spectHRplot(data, x_min=None, x_max=None):
     # Initialize LineHandler for managing R-top times and AreaHandler for shaded regions
     line_handler = LineHandler(fig, ax_ecg, callback_drag=update_rtop_times)
     area_handler = AreaHandler(fig, ax_ecg)
+    
     positional_patch  = plot_overview(ax_overview, data.ecg.time, data.ecg.level,  x_min, x_max)
 
     def update_plot(x_min, x_max):
@@ -102,7 +104,8 @@ def spectHRplot(data, x_min=None, x_max=None):
         # Update patch and plot properties
         positional_patch.set_x(x_min)
         positional_patch.set_width(x_max - x_min)
-    
+        fig.canvas.draw_idle()
+   
     def on_release(event):
         """Reset dragging mode upon mouse release."""
         nonlocal drag_mode
@@ -128,13 +131,17 @@ def spectHRplot(data, x_min=None, x_max=None):
         line_handler.update_mode(change['new'])
 
     mode_select.observe(update_mode, names='value')
-    
+    GUI = widgets.AppLayout(header=mode_select, 
+                            left_sidebar=None, 
+                            center=fig.canvas, 
+                            right_sidebar=None, 
+                            footer=None, pane_heights = [1, 30,0])
     # Initialize plot
     update_plot(x_min, x_max)
     fig.canvas.draw_idle()
 
     # Control box for displaying controls and plot
-    control_box = widgets.VBox([mode_select, fig.canvas])
+    return(GUI)
 
 def create_figure_axes(data):
     """
@@ -157,7 +164,7 @@ def create_figure_axes(data):
     else:
         fig, (ax_ecg, ax_overview) = plt.subplots(
             2, 1, figsize=(12, 8), sharex=False,
-            gridspec_kw={'height_ratios': [6, 1]}
+            gridspec_kw={'height_ratios': [11, 1]}
         )
         ax_br = None
 
@@ -167,6 +174,7 @@ def plot_overview(ax, ecg_time, ecg_level, x_min, x_max):
     """Plot ECG overview with a shaded region representing the zoomed area."""
     ax.clear()
     ax.plot(ecg_time, ecg_level, color='green')
+    ax.set_title('')
         # Initialize a draggable patch for the overview plot
     positional_patch = patches.Rectangle((x_min, ax.get_ylim()[0]),
                               x_max - x_min, ax.get_ylim()[1] - ax.get_ylim()[0],
@@ -188,6 +196,7 @@ def plot_rtop_times(ax, rtop_times, x_min, x_max, line_handler):
 
 def set_ecg_plot_properties(ax, x_min, x_max):
     """Configure ECG plot properties."""
+    ax.set_title('')
     ax.set_xlabel('Time (seconds)')
     ax.set_ylabel('ECG Level (mV)')
     ax.set_xlim(x_min, x_max)
