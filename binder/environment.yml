@@ -38,6 +38,7 @@ dependencies:
   - plotly
   - pyarrow
   - pygwalker
+  - pyhrv
   - python
   - pyxdf  
   - requests
