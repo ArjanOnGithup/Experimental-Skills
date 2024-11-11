@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.ticker import MultipleLocator
+from matplotlib.patches import FancyArrowPatch
+from matplotlib.text import Annotation
 import ipywidgets as widgets
 import math
 
@@ -23,7 +25,7 @@ def spectplot(data, x_min=None, x_max=None):
     - Mode selection for dragging, adding, finding, or removing R-top times.
     """
     # Local Functions:
-    
+    RTopColors = {'N': 'green', 'L': 'cyan', 'S': 'magenta', 'T': 'orange', '1': 'turquoise', '2': 'lightseagreen'}    
     def update_plot(x_min, x_max):
         """
         Redraw the ECG plot, R-top times, and breathing rate (if available).
@@ -35,24 +37,44 @@ def spectplot(data, x_min=None, x_max=None):
         """
         
         plot_ecg_signal(ax_ecg, data.ecg.time, data.ecg.level)
+
+        # Plot R-top times if available in the data
         if hasattr(data.ecg, 'RTopTimes'):
-            plot_rtop_times(ax_ecg, data.ecg.RTopTimes,line_handler)
+            # Plot only R-tops within x_min and x_max
+            data.ecg.ibi = np.append(np.diff(data.ecg.RTopTimes),0)
+            visible_rtops = [(t, c, ibi) for t, c, ibi in zip(data.ecg.RTopTimes, data.ecg.classID, data.ecg.ibi)
+                         if x_min <= t <= x_max]
+            
+            if visible_rtops:
+                if len(visible_rtops) < 60:
+                    plot_rtop_times(ax_ecg, visible_rtops, line_handler)  # Plot VLines in the current view
+
+            ax_ecg.set_ylim(ax_ecg.get_ylim()[0], ax_ecg.get_ylim()[1] * 1.2)
+            #data.ecg.ibi = np.append(np.diff(data.ecg.RTopTimes), 0)
+            #plot_rtop_times(ax_ecg, zip(data.ecg.RTopTimes, data.ecg.classID, data.ecg.ibi), line_handler)
+        
         set_ecg_plot_properties(ax_ecg, x_min, x_max)
+        
+        # Plot the breathing rate if available in the data
         if ax_br is not None and data.br is not None:
             plot_breathing_rate(ax_br, data.br.time, data.br.level, x_min, x_max, line_handler)
+
         fig.canvas.draw_idle()
 
     def on_press(event):
-        """Handle mouse press event to initiate dragging on overview plot."""
+        """
+        Handles the mouse press event on the overview plot to initiate dragging.
+        Determines the area (left, right, or center) that is clicked for zoom adjustment.
+        """
         nonlocal drag_mode, initial_xmin, initial_xmax
-        if event.inaxes != ax_overview:
+        if event.inaxes != ax_overview:  # If click is outside the overview plot
             return
 
-        # Check if the press is within the draggable patch bounds
+        # Check if the press is within the draggable region (x_min, x_max)
         if x_min <= event.xdata <= x_max:
             initial_xmin, initial_xmax = x_min, x_max
             dist = x_max - x_min
-            # Determine drag mode based on proximity to the edges
+            # Determine drag mode based on proximity to the edges of the zoom box
             if abs(event.xdata - x_min) < 0.3 * dist:
                 drag_mode = 'left'
             elif abs(event.xdata - x_max) < 0.3 * dist:
@@ -61,12 +83,15 @@ def spectplot(data, x_min=None, x_max=None):
                 drag_mode = 'center'
 
     def on_drag(event):
-        """Handle dragging of the patch to adjust the zoom region."""
+        """
+        Handles the dragging event for adjusting the zoom region based on the drag mode.
+        Adjusts the x_min and x_max limits depending on where the mouse is dragged.
+        """
         nonlocal x_min, x_max, drag_mode, initial_xmin, initial_xmax
-        if drag_mode is None or event.inaxes != ax_overview:
+        if drag_mode is None or event.inaxes != ax_overview:  # If not in drag mode or outside the overview plot
             return
 
-        # Adjust limits based on drag mode
+        # Adjust the zoom limits based on drag mode (left, right, or center)
         if drag_mode == 'left':
             x_min = min(event.xdata, x_max - 0.1)
         elif drag_mode == 'right':
@@ -76,21 +101,21 @@ def spectplot(data, x_min=None, x_max=None):
             x_min = initial_xmin + dx
             x_max = initial_xmax + dx
 
-        # Update patch and plot properties
+        # Update the zoom box position
         positional_patch.set_x(x_min)
         positional_patch.set_width(x_max - x_min)
         fig.canvas.draw_idle()
-   
+
     def on_release(event):
-        """Reset dragging mode upon mouse release."""
+        """Resets the dragging mode upon mouse release."""
         nonlocal drag_mode
         drag_mode = None
-        set_ecg_plot_properties(ax_ecg, x_min, x_max)
+        update_plot(x_min, x_max)
         fig.canvas.draw_idle()
 
     def update_mode(change):
         """Update the mode in LineHandler based on dropdown selection."""
-        line_handler.update_mode(change['new'])
+        line_handler.update_mode(change['drag'])
 
 
     def create_figure_axes(data):
@@ -121,7 +146,9 @@ def spectplot(data, x_min=None, x_max=None):
         return fig, ax_ecg, ax_overview, ax_br
 
     def plot_overview(ax, ecg_time, ecg_level, x_min, x_max):
-        """Plot ECG overview with a shaded region representing the zoomed area."""
+        """
+        Plots the ECG signal on an overview plot with a shaded rectangle indicating the zoom region.
+        """
         ax.clear()
         ax.plot(ecg_time, ecg_level, color='green')
         ax.set_title('')
@@ -137,27 +164,42 @@ def spectplot(data, x_min=None, x_max=None):
         ax.spines['left'].set_visible(False)
         return positional_patch
 
-    def plot_rtop_times(ax, rtop_times, line_handler):
-        """Plot vertical lines for R-top times within the current view."""
+    def plot_rtop_times(ax, RTOPS, line_handler):
+        """
+        Plots vertical lines and arrows for each R-top time with labels indicating the IBI value.
+        """
+        h = ax.get_ylim()[1] + (0.05 * (ax.get_ylim()[1] - ax.get_ylim()[0]))
         line_handler.draggable_lines = []
-        for rtop in rtop_times:
-            line_handler.add_line(ax, rtop, color='blue')
+        for rtop in tuple(RTOPS):
+            line_handler.add_line(ax, rtop[0], color=RTopColors[rtop[1]])
+            #Draw a double-sided arrow from the current R-top to the next
+            arrow = FancyArrowPatch((rtop[0], h), 
+                                 (rtop[0]+rtop[2], h), 
+                                arrowstyle='<->', color='blue', mutation_scale=15, linewidth=.5)
+            ax.add_patch(arrow)
+            ax.text(
+                rtop[0]+(.5*rtop[2]), 
+                h,  # Offset above the plot
+                f"{1000*rtop[2]:.0f}", fontsize=7, rotation = 0,
+                horizontalalignment='center', verticalalignment='center', color='blue', bbox=dict(facecolor = 'white', edgecolor = 'blue')
+            )
 
     def set_ecg_plot_properties(ax, x_min, x_max):
         """Configure ECG plot properties."""
-        r = data.ecg.level.max()-data.ecg.level.min()
-        s = int(math.log10(abs(r)))
-
+        ldisp = int(math.log10(abs(data.ecg.level.max()-data.ecg.level.min())))
+        tdisp = round(math.log10(x_max-x_min),0)
+        
         ax.set_title('')
         ax.set_xlabel('Time (seconds)')
         ax.set_ylabel('ECG Level (mV)')
         ax.set_xlim(x_min, x_max)
         
-        ax.xaxis.set_major_locator(MultipleLocator(1))  # Major ticks every 1 second
-        ax.xaxis.set_minor_locator(MultipleLocator(0.2))  # Minor ticks every 0.2 seconds
+        ax.xaxis.set_major_locator(MultipleLocator(math.pow(10,tdisp-1)))  # Major ticks every 1 second
+        ax.xaxis.set_minor_locator(MultipleLocator(math.pow(10,tdisp-1)/5))  # Minor ticks every 0.2 seconds
+        #ax.xaxis.set_minor_locator(AutoMinorLocator())  # Minor ticks every 0.2 seconds
 
-        ax.yaxis.set_major_locator(MultipleLocator(math.pow(10,s))) 
-        ax.yaxis.set_minor_locator(MultipleLocator(math.pow(10,s)/5))
+        ax.yaxis.set_major_locator(MultipleLocator(math.pow(10,ldisp))) 
+        ax.yaxis.set_minor_locator(MultipleLocator(math.pow(10,ldisp)/5))
 
         ax.xaxis.grid(which='minor', color='salmon', lw=0.3)
         ax.xaxis.grid(which='major', color='r', lw=0.7)
@@ -168,6 +210,7 @@ def spectplot(data, x_min=None, x_max=None):
 
     def plot_ecg_signal(ax, ecg_time, ecg_level):
         """Plot the ECG signal on the provided axis."""
+        ax.clear()
         ax.plot(ecg_time, ecg_level, label='ECG Signal', color='red')
 
     def plot_breathing_rate(ax, br_time, br_level, x_min, x_max, line_handler):
@@ -198,14 +241,14 @@ def spectplot(data, x_min=None, x_max=None):
 
     # Initialize LineHandler for managing R-top times and AreaHandler for shaded regions
     line_handler = LineHandler(fig, ax_ecg, callback_drag=update_rtop_times)
-    area_handler = AreaHandler(fig, ax_ecg)
-    
+    area_handler = AreaHandler(fig, ax_ecg)    
     positional_patch  = plot_overview(ax_overview, data.ecg.time, data.ecg.level,  x_min, x_max)
 
- 
     # State variables for dragging
     drag_mode = None
     initial_xmin, initial_xmax = x_min, x_max
+
+    update_plot(x_min, x_max)
     # Connect the patch dragging events
     fig.canvas.mpl_connect('button_press_event', on_press)
     fig.canvas.mpl_connect('motion_notify_event', on_drag)
@@ -220,13 +263,14 @@ def spectplot(data, x_min=None, x_max=None):
     )
 
     mode_select.observe(update_mode, names='value')
+    
     GUI = widgets.AppLayout(header=mode_select, 
                             left_sidebar=None, 
                             center=fig.canvas, 
                             right_sidebar=None, 
                             footer=None, pane_heights = [1, 30,0])
     # Initialize plot
-    update_plot(x_min, x_max)
+    #update_plot(x_min, x_max)
     fig.canvas.draw_idle()
 
     # Control box for displaying controls and plot

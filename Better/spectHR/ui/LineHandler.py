@@ -123,7 +123,7 @@ class LineHandler:
         """
         if line in self.draggable_lines:
             line.line.remove()  # Remove line from the plot
-            #self.draggable_lines.discard(line)
+            self.draggable_lines.discard(line)
             plt.draw()
             
             if self.callback_remove:
