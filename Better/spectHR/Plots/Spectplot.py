@@ -1,11 +1,13 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+from matplotlib.ticker import MultipleLocator
 import ipywidgets as widgets
+import math
 
 from ..ui.LineHandler import LineHandler, AreaHandler
 import numpy as np
 
-def spectHRplot(data, x_min=None, x_max=None):
+def spectplot(data, x_min=None, x_max=None):
     """
     Plot the heart rate data with interactive features for zooming, 
     dragging lines, and selecting modes for adding, removing, or finding R-top times.
@@ -34,7 +36,7 @@ def spectHRplot(data, x_min=None, x_max=None):
         
         plot_ecg_signal(ax_ecg, data.ecg.time, data.ecg.level)
         if hasattr(data.ecg, 'RTopTimes'):
-            plot_rtop_times(ax_ecg, data.ecg.RTopTimes, x_min, x_max, line_handler)
+            plot_rtop_times(ax_ecg, data.ecg.RTopTimes,line_handler)
         set_ecg_plot_properties(ax_ecg, x_min, x_max)
         if ax_br is not None and data.br is not None:
             plot_breathing_rate(ax_br, data.br.time, data.br.level, x_min, x_max, line_handler)
@@ -135,25 +137,38 @@ def spectHRplot(data, x_min=None, x_max=None):
         ax.spines['left'].set_visible(False)
         return positional_patch
 
-    def plot_rtop_times(ax, rtop_times, x_min, x_max, line_handler):
+    def plot_rtop_times(ax, rtop_times, line_handler):
         """Plot vertical lines for R-top times within the current view."""
         line_handler.draggable_lines = []
         for rtop in rtop_times:
-            if x_min <= rtop <= x_max:
-                line_handler.add_line(ax, rtop, color='r')
+            line_handler.add_line(ax, rtop, color='blue')
 
     def set_ecg_plot_properties(ax, x_min, x_max):
         """Configure ECG plot properties."""
+        r = data.ecg.level.max()-data.ecg.level.min()
+        s = int(math.log10(abs(r)))
+
         ax.set_title('')
         ax.set_xlabel('Time (seconds)')
         ax.set_ylabel('ECG Level (mV)')
         ax.set_xlim(x_min, x_max)
+        
+        ax.xaxis.set_major_locator(MultipleLocator(1))  # Major ticks every 1 second
+        ax.xaxis.set_minor_locator(MultipleLocator(0.2))  # Minor ticks every 0.2 seconds
+
+        ax.yaxis.set_major_locator(MultipleLocator(math.pow(10,s))) 
+        ax.yaxis.set_minor_locator(MultipleLocator(math.pow(10,s)/5))
+
+        ax.xaxis.grid(which='minor', color='salmon', lw=0.3)
+        ax.xaxis.grid(which='major', color='r', lw=0.7)
+        ax.yaxis.grid(which='minor', color='salmon', lw=0.3)
+        ax.yaxis.grid(which='major', color='r', lw=0.7)
+        
         ax.grid(True)
 
     def plot_ecg_signal(ax, ecg_time, ecg_level):
         """Plot the ECG signal on the provided axis."""
-        ax.clear()
-        ax.plot(ecg_time, ecg_level, label='ECG Signal', color='blue')
+        ax.plot(ecg_time, ecg_level, label='ECG Signal', color='red')
 
     def plot_breathing_rate(ax, br_time, br_level, x_min, x_max, line_handler):
         """Plot breathing rate data on a separate axis."""

@@ -20,8 +20,30 @@ def spectHRplot(data, x_min=None, x_max=None):
     - Adjustable zoom region using the overview plot.
     - Mode selection for dragging, adding, finding, or removing R-top times.
     """
-    # Local Functions:
+    # Configure theme
+    plt.ioff()
+    plt.title('')
+    # Initialize x-axis limits based on input or data
+    x_min = x_min if x_min is not None else data.ecg.time.min()
+    x_max = x_max if x_max is not None else data.ecg.time.max()
+
+    # Create figure and axis handles
+    fig, ax_ecg, ax_overview, ax_br = create_figure_axes(data)
+    fig.canvas.toolbar_visible = False
+    fig.tight_layout()
+
+    # Callback to update R-top times upon dragging a line
+    def update_rtop_times(line, new_x):
+        """Update the position of an R-top time after dragging."""
+        idx = line_handler.draggable_lines.index(line)
+        data.ecg.RTopTimes.iloc[idx] = new_x
+
+    # Initialize LineHandler for managing R-top times and AreaHandler for shaded regions
+    line_handler = LineHandler(fig, ax_ecg, callback_drag=update_rtop_times)
+    area_handler = AreaHandler(fig, ax_ecg)
     
+    positional_patch  = plot_overview(ax_overview, data.ecg.time, data.ecg.level,  x_min, x_max)
+
     def update_plot(x_min, x_max):
         """
         Redraw the ECG plot, R-top times, and breathing rate (if available).
@@ -39,6 +61,11 @@ def spectHRplot(data, x_min=None, x_max=None):
         if ax_br is not None and data.br is not None:
             plot_breathing_rate(ax_br, data.br.time, data.br.level, x_min, x_max, line_handler)
         fig.canvas.draw_idle()
+
+ 
+    # State variables for dragging
+    drag_mode = None
+    initial_xmin, initial_xmax = x_min, x_max
 
     def on_press(event):
         """Handle mouse press event to initiate dragging on overview plot."""
@@ -86,111 +113,6 @@ def spectHRplot(data, x_min=None, x_max=None):
         set_ecg_plot_properties(ax_ecg, x_min, x_max)
         fig.canvas.draw_idle()
 
-    def update_mode(change):
-        """Update the mode in LineHandler based on dropdown selection."""
-        line_handler.update_mode(change['new'])
-
-
-    def create_figure_axes(data):
-        """
-        Create and return figure and axes for ECG and optional breathing data.
-
-        Parameters:
-        - data (object): Contains ECG and optional breathing data.
-
-        Returns:
-        - fig (Figure): Matplotlib figure containing all plots.
-        - ax_ecg (Axes): Axis for the ECG signal plot.
-        - ax_overview (Axes): Axis for the overview plot.
-        - ax_br (Axes, optional): Axis for breathing rate if data is available.
-        """
-        if data.br is not None:
-            fig, (ax_ecg, ax_overview, ax_br) = plt.subplots(
-                3, 1, figsize=(12, 8), sharex=True,
-                gridspec_kw={'height_ratios': [4, 1, 3]}
-            )
-        else:
-            fig, (ax_ecg, ax_overview) = plt.subplots(
-                2, 1, figsize=(12, 8), sharex=False,
-                gridspec_kw={'height_ratios': [11, 1]}
-            )
-            ax_br = None
-
-        return fig, ax_ecg, ax_overview, ax_br
-
-    def plot_overview(ax, ecg_time, ecg_level, x_min, x_max):
-        """Plot ECG overview with a shaded region representing the zoomed area."""
-        ax.clear()
-        ax.plot(ecg_time, ecg_level, color='green')
-        ax.set_title('')
-            # Initialize a draggable patch for the overview plot
-        positional_patch = patches.Rectangle((x_min, ax.get_ylim()[0]),
-                                  x_max - x_min, ax.get_ylim()[1] - ax.get_ylim()[0],
-                                  color='blue', alpha=0.2, animated = False)
-
-        ax.add_patch(positional_patch)
-        ax.set_yticks([])  
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.spines['left'].set_visible(False)
-        return positional_patch
-
-    def plot_rtop_times(ax, rtop_times, x_min, x_max, line_handler):
-        """Plot vertical lines for R-top times within the current view."""
-        line_handler.draggable_lines = []
-        for rtop in rtop_times:
-            if x_min <= rtop <= x_max:
-                line_handler.add_line(ax, rtop, color='r')
-
-    def set_ecg_plot_properties(ax, x_min, x_max):
-        """Configure ECG plot properties."""
-        ax.set_title('')
-        ax.set_xlabel('Time (seconds)')
-        ax.set_ylabel('ECG Level (mV)')
-        ax.set_xlim(x_min, x_max)
-        ax.grid(True)
-
-    def plot_ecg_signal(ax, ecg_time, ecg_level):
-        """Plot the ECG signal on the provided axis."""
-        ax.clear()
-        ax.plot(ecg_time, ecg_level, label='ECG Signal', color='blue')
-
-    def plot_breathing_rate(ax, br_time, br_level, x_min, x_max, line_handler):
-        """Plot breathing rate data on a separate axis."""
-        ax.clear()
-        ax.plot(br_time, br_level, label='Breathing Signal', color='green')
-        ax.set_ylabel('Breathing Level')
-        ax.grid(True)
-   
-    # Main Plot: Configure theme
-    plt.ioff()
-    plt.title('')
-    
-    # Initialize x-axis limits based on input or data
-    x_min = x_min if x_min is not None else data.ecg.time.min()
-    x_max = x_max if x_max is not None else data.ecg.time.max()
-
-    # Create figure and axis handles
-    fig, ax_ecg, ax_overview, ax_br = create_figure_axes(data)
-    fig.canvas.toolbar_visible = False
-    fig.tight_layout()
-
-    # Callback to update R-top times upon dragging a line
-    def update_rtop_times(line, new_x):
-        """Update the position of an R-top time after dragging."""
-        idx = line_handler.draggable_lines.index(line)
-        data.ecg.RTopTimes.iloc[idx] = new_x
-
-    # Initialize LineHandler for managing R-top times and AreaHandler for shaded regions
-    line_handler = LineHandler(fig, ax_ecg, callback_drag=update_rtop_times)
-    area_handler = AreaHandler(fig, ax_ecg)
-    
-    positional_patch  = plot_overview(ax_overview, data.ecg.time, data.ecg.level,  x_min, x_max)
-
- 
-    # State variables for dragging
-    drag_mode = None
-    initial_xmin, initial_xmax = x_min, x_max
     # Connect the patch dragging events
     fig.canvas.mpl_connect('button_press_event', on_press)
     fig.canvas.mpl_connect('motion_notify_event', on_drag)
@@ -203,6 +125,10 @@ def spectHRplot(data, x_min=None, x_max=None):
         description='Mode:',
         layout=widgets.Layout(width='200px')
     )
+
+    def update_mode(change):
+        """Update the mode in LineHandler based on dropdown selection."""
+        line_handler.update_mode(change['new'])
 
     mode_select.observe(update_mode, names='value')
     GUI = widgets.AppLayout(header=mode_select, 
@@ -217,3 +143,73 @@ def spectHRplot(data, x_min=None, x_max=None):
     # Control box for displaying controls and plot
     return(GUI)
 
+def create_figure_axes(data):
+    """
+    Create and return figure and axes for ECG and optional breathing data.
+
+    Parameters:
+    - data (object): Contains ECG and optional breathing data.
+
+    Returns:
+    - fig (Figure): Matplotlib figure containing all plots.
+    - ax_ecg (Axes): Axis for the ECG signal plot.
+    - ax_overview (Axes): Axis for the overview plot.
+    - ax_br (Axes, optional): Axis for breathing rate if data is available.
+    """
+    if data.br is not None:
+        fig, (ax_ecg, ax_overview, ax_br) = plt.subplots(
+            3, 1, figsize=(12, 8), sharex=True,
+            gridspec_kw={'height_ratios': [4, 1, 3]}
+        )
+    else:
+        fig, (ax_ecg, ax_overview) = plt.subplots(
+            2, 1, figsize=(12, 8), sharex=False,
+            gridspec_kw={'height_ratios': [11, 1]}
+        )
+        ax_br = None
+
+    return fig, ax_ecg, ax_overview, ax_br
+
+def plot_overview(ax, ecg_time, ecg_level, x_min, x_max):
+    """Plot ECG overview with a shaded region representing the zoomed area."""
+    ax.clear()
+    ax.plot(ecg_time, ecg_level, color='green')
+    ax.set_title('')
+        # Initialize a draggable patch for the overview plot
+    positional_patch = patches.Rectangle((x_min, ax.get_ylim()[0]),
+                              x_max - x_min, ax.get_ylim()[1] - ax.get_ylim()[0],
+                              color='blue', alpha=0.2, animated = False)
+
+    ax.add_patch(positional_patch)
+    ax.set_yticks([])  
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    return positional_patch
+
+def plot_rtop_times(ax, rtop_times, x_min, x_max, line_handler):
+    """Plot vertical lines for R-top times within the current view."""
+    line_handler.draggable_lines = []
+    for rtop in rtop_times:
+        if x_min <= rtop <= x_max:
+            line_handler.add_line(ax, rtop, color='r')
+
+def set_ecg_plot_properties(ax, x_min, x_max):
+    """Configure ECG plot properties."""
+    ax.set_title('')
+    ax.set_xlabel('Time (seconds)')
+    ax.set_ylabel('ECG Level (mV)')
+    ax.set_xlim(x_min, x_max)
+    ax.grid(True)
+
+def plot_ecg_signal(ax, ecg_time, ecg_level):
+    """Plot the ECG signal on the provided axis."""
+    ax.clear()
+    ax.plot(ecg_time, ecg_level, label='ECG Signal', color='blue')
+
+def plot_breathing_rate(ax, br_time, br_level, x_min, x_max, line_handler):
+    """Plot breathing rate data on a separate axis."""
+    ax.clear()
+    ax.plot(br_time, br_level, label='Breathing Signal', color='green')
+    ax.set_ylabel('Breathing Level')
+    ax.grid(True)
