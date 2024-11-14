@@ -21,7 +21,7 @@ class DraggableVLine:
             callback_drag (callable, optional): Callback for when the line is dragged.
         """
         self.ax = ax
-        self.line = ax.axvline(x=x_position, color=color, linestyle='--', picker=True, alpha = .5)
+        self.line = ax.axvline(x=x_position, color=color, linestyle=':', picker=True, alpha = .4)
         self.callback_drag = callback_drag
         self.press = None
 
@@ -112,8 +112,8 @@ class LineHandler:
         line = DraggableVLine(ax, x_position, self.callback_drag, color=color)
         line.connect(ax.figure) 
         self.draggable_lines.append(line)
-        
 
+        
     def remove_line(self, line):
         """
         Removes a specified line from the set of draggable lines.

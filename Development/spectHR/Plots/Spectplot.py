@@ -3,6 +3,7 @@ import matplotlib.patches as patches
 from matplotlib.ticker import MultipleLocator
 from matplotlib.patches import FancyArrowPatch
 from matplotlib.text import Annotation
+import mplcursors
 import ipywidgets as widgets
 import math
 
@@ -25,6 +26,9 @@ def spectplot(data, x_min=None, x_max=None):
     - Mode selection for dragging, adding, finding, or removing R-top times.
     """
     # Local Functions:
+    out = widgets.Output()
+    display(out)
+
     RTopColors = {'N': 'green', 'L': 'cyan', 'S': 'magenta', 'T': 'orange', '1': 'turquoise', '2': 'lightseagreen'}    
     def update_plot(x_min, x_max):
         """
@@ -44,7 +48,9 @@ def spectplot(data, x_min=None, x_max=None):
             data.ecg.ibi = np.append(np.diff(data.ecg.RTopTimes),0)
             visible_rtops = [(t, c, ibi) for t, c, ibi in zip(data.ecg.RTopTimes, data.ecg.classID, data.ecg.ibi)
                          if x_min <= t <= x_max]
-            
+            with out:
+                print(tuple(visible_rtops))
+                
             if visible_rtops:
                 if len(visible_rtops) < 60:
                     plot_rtop_times(ax_ecg, visible_rtops, line_handler)  # Plot VLines in the current view
@@ -170,6 +176,7 @@ def spectplot(data, x_min=None, x_max=None):
         """
         h = ax.get_ylim()[1] + (0.05 * (ax.get_ylim()[1] - ax.get_ylim()[0]))
         line_handler.draggable_lines = []
+        line_handler.lines = []
         for rtop in tuple(RTOPS):
             line_handler.add_line(ax, rtop[0], color=RTopColors[rtop[1]])
             #Draw a double-sided arrow from the current R-top to the next
@@ -177,11 +184,12 @@ def spectplot(data, x_min=None, x_max=None):
                                  (rtop[0]+rtop[2], h), 
                                 arrowstyle='<->', color='blue', mutation_scale=15, linewidth=.5)
             ax.add_patch(arrow)
+
             ax.text(
                 rtop[0]+(.5*rtop[2]), 
                 h,  # Offset above the plot
-                f"{1000*rtop[2]:.0f}", fontsize=7, rotation = 0,
-                horizontalalignment='center', verticalalignment='center', color='blue', bbox=dict(facecolor = 'white', edgecolor = 'blue')
+                f"{1000*rtop[2]:.0f}", fontsize=6, rotation = 0,
+                horizontalalignment='center', verticalalignment='bottom', color='blue', bbox=dict(facecolor = ax.get_facecolor(), edgecolor = ax.get_facecolor(), alpha = .4)
             )
 
     def set_ecg_plot_properties(ax, x_min, x_max):
@@ -206,12 +214,13 @@ def spectplot(data, x_min=None, x_max=None):
         ax.yaxis.grid(which='minor', color='salmon', lw=0.3)
         ax.yaxis.grid(which='major', color='r', lw=0.7)
         
-        ax.grid(True)
+        ax.grid(True, 'major', alpha = .3)
+        ax.grid(True, 'minor', alpha = .2)
 
     def plot_ecg_signal(ax, ecg_time, ecg_level):
         """Plot the ECG signal on the provided axis."""
         ax.clear()
-        ax.plot(ecg_time, ecg_level, label='ECG Signal', color='red')
+        ax.plot(ecg_time, ecg_level, label='ECG Signal', color='blue', linewidth = .7, alpha = .8)
 
     def plot_breathing_rate(ax, br_time, br_level, x_min, x_max, line_handler):
         """Plot breathing rate data on a separate axis."""
@@ -232,7 +241,6 @@ def spectplot(data, x_min=None, x_max=None):
     fig, ax_ecg, ax_overview, ax_br = create_figure_axes(data)
     fig.canvas.toolbar_visible = False
     fig.tight_layout()
-
     # Callback to update R-top times upon dragging a line
     def update_rtop_times(line, new_x):
         """Update the position of an R-top time after dragging."""
