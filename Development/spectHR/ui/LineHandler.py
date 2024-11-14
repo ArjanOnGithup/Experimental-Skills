@@ -235,26 +235,3 @@ class AreaHandler:
         fig.canvas.mpl_connect('motion_notify_event', self.on_drag)
         fig.canvas.mpl_connect('button_release_event', self.on_release)
 
-'''
-# Example usage
-fig, ax = plt.subplots()
-
-# LineHandler with callbacks for add/remove/drag events
-line_handler = LineHandler(
-    callback_add=lambda line: print(f"Added line at x={line.line.get_xdata()}"),
-    callback_remove=lambda line: print(f"Removed line at x={line.line.get_xdata()}"),
-    callback_drag=lambda line, x: print(f"Dragged line to x={x}")
-)
-line_handler.add_line(ax, x_position=5)
-
-# AreaHandler with callbacks for selection ranges
-area_handler = AreaHandler(
-    ax,
-    callback_del=lambda range: print(f"Deleting range: {range}"),
-    callback_find=lambda range: print(f"Finding in range: {range}")
-)
-area_handler.set_mode('del')
-area_handler.connect_events(fig)
-
-plt.show()
-'''
