@@ -2,14 +2,16 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.ticker import MultipleLocator
 from matplotlib.patches import FancyArrowPatch
-#from matplotlib.text import Annotation
-#import mplcursors
+
 import ipywidgets as widgets
 import math
+import pdb
 
 from ..ui.LineHandler import LineHandler, AreaHandler
 import numpy as np
 import pandas as pd
+
+out = widgets.Output()
 
 def spectplot(data, x_min=None, x_max=None):
     """
@@ -28,9 +30,6 @@ def spectplot(data, x_min=None, x_max=None):
     """
     
      # Local Functions:
-    out = widgets.Output()
-    display(out)
-
     RTopColors = {'N': 'green', 'L': 'cyan', 'S': 'magenta', 'T': 'orange', '1': 'turquoise', '2': 'lightseagreen'}    
     def update_plot(x_min, x_max):
         """
@@ -43,13 +42,11 @@ def spectplot(data, x_min=None, x_max=None):
         """
         
         plot_ecg_signal(ax_ecg, data.ecg.time, data.ecg.level)
-
         # Plot R-top times if available in the data
         if hasattr(data.ecg, 'RTopTimes'):
-            
             # Plot only R-tops within x_min and x_max
             visible_rtops = [(t, c) for t, c in sorted(zip(data.ecg.RTopTimes, data.ecg.classID))
-                         if x_min <= t <= x_max]
+                         if (x_min-1) <= t <= (x_max+1)]
             if visible_rtops:
                 if len(visible_rtops) < 60:
                     plot_rtop_times(ax_ecg, visible_rtops, line_handler)  # Plot VLines in the current view
@@ -113,14 +110,14 @@ def spectplot(data, x_min=None, x_max=None):
 
     def on_release(event):
         """Resets the dragging mode upon mouse release."""
-        nonlocal drag_mode
+        nonlocal drag_mode        
         drag_mode = None
         update_plot(x_min, x_max)
         fig.canvas.draw_idle()
 
     def update_mode(change):
-        """Update the mode in LineHandler based on dropdown selection."""
-        line_handler.update_mode(change['drag'])
+        """Update the mode in LineHandler based on dropdown selection."""      
+        line_handler.update_mode(change)
 
 
     def create_figure_axes(data):
@@ -138,12 +135,12 @@ def spectplot(data, x_min=None, x_max=None):
         """
         if data.br is not None:
             fig, (ax_ecg, ax_overview, ax_br) = plt.subplots(
-                3, 1, figsize=(12, 8), sharex=True,
+                3, 1, figsize=(8, 6), sharex=True,
                 gridspec_kw={'height_ratios': [4, 1, 3]}
             )
         else:
             fig, (ax_ecg, ax_overview) = plt.subplots(
-                2, 1, figsize=(12, 8), sharex=False,
+                2, 1, figsize=(8, 6), sharex=False,
                 gridspec_kw={'height_ratios': [11, 1]}
             )
             ax_br = None
@@ -174,9 +171,8 @@ def spectplot(data, x_min=None, x_max=None):
         Plots vertical lines and arrows for each R-top time with labels indicating the IBI value.
         """
         h = ax.get_ylim()[1] + (0.05 * (ax.get_ylim()[1] - ax.get_ylim()[0]))
-        line_handler.draggable_lines = []
-        line_handler.lines = []
-
+        #line_handler.draggable_lines = []
+        #line_handler = LineHandler(fig, ax_ecg, callback_drag=update_rtop_times)
         Rt = [num for num, _ in vis_rtops]
         ibis = np.append(np.diff(Rt), 0)
         RTOPS = zip(*zip(*vis_rtops), ibis)
@@ -185,15 +181,21 @@ def spectplot(data, x_min=None, x_max=None):
             if rtop[2] != 0:
                 #Draw a double-sided arrow from the current R-top to the next
                 arrow = FancyArrowPatch((rtop[0], h), 
-                                     (rtop[0]+rtop[2], h), 
-                                    arrowstyle='<->', color='blue', mutation_scale=15, linewidth=.5)
+                                        (rtop[0]+rtop[2], h), 
+                                        arrowstyle='<->', 
+                                        color='blue', 
+                                        mutation_scale=15, 
+                                        linewidth=.5)
                 ax.add_patch(arrow)
     
                 ax.text(
                     rtop[0]+(.5*rtop[2]), 
                     h,  # Offset above the plot
                     f"{1000*rtop[2]:.0f}", fontsize=6, rotation = 0,
-                    horizontalalignment='center', verticalalignment='bottom', color='blue', bbox=dict(facecolor = ax.get_facecolor(), edgecolor = ax.get_facecolor(), alpha = .4)
+                    horizontalalignment='center', 
+                    verticalalignment='bottom', 
+                    color='blue', 
+                    bbox=dict(facecolor = ax.get_facecolor(), edgecolor = ax.get_facecolor(), alpha = .4)
                 )
 
     def set_ecg_plot_properties(ax, x_min, x_max):
@@ -237,8 +239,8 @@ def spectplot(data, x_min=None, x_max=None):
         # find the first RTopTime with a non-'N' label, smaller then x_min
         nonlocal x_min, x_max
         x_range = x_max - x_min
-        idx = data.ecg.RTopTimes[(pd.Series(data.ecg.classID) == 'S') & (data.ecg.RTopTimes < (x_min -  (.51*x_range)))]
-        next_idx = idx.iloc[0] if not idx.empty else None     
+        idx = data.ecg.RTopTimes[(pd.Series(data.ecg.classID) == 'S') & (data.ecg.RTopTimes < (x_min))]
+        next_idx = idx.iloc[-1] if not idx.empty else None     
         
         if next_idx is not None:
             x_min = next_idx-(.5*x_range)
@@ -253,7 +255,7 @@ def spectplot(data, x_min=None, x_max=None):
         # find the first RTopTime with a non-'N' label, smaller then x_min
         nonlocal x_min, x_max            
         x_range = x_max - x_min
-        idx = data.ecg.RTopTimes[(pd.Series(data.ecg.classID) == 'S') & (data.ecg.RTopTimes > (x_min + (.51*x_range)))]
+        idx = data.ecg.RTopTimes[(pd.Series(data.ecg.classID) == 'S') & (data.ecg.RTopTimes > (x_max))]
         next_idx = idx.iloc[0] if not idx.empty else None     
         if next_idx is not None:
             x_min = next_idx-(.5*x_range)
@@ -278,15 +280,44 @@ def spectplot(data, x_min=None, x_max=None):
     fig.set_figheight(5) 
     fig.canvas.toolbar_visible = False
     fig.tight_layout()
+    
     # Callback to update R-top times upon dragging a line
     def update_rtop_times(line, new_x):
-        """Update the position of an R-top time after dragging."""
-        idx = line_handler.draggable_lines.index(line)
-        data.ecg.RTopTimes.iloc[idx] = new_x
-
-    # Initialize LineHandler for managing R-top times and AreaHandler for shaded regions
+        '''
+        Update the position of an R-top time after dragging.
+    
+        This function updates the 'RTopTimes' series by replacing the closest 
+        value to the original R-top time (line.origID) with a new value (new_x).
+        It then reorders the 'RTopTimes' series and the 'classID' list based on 
+        the updated R-top times, ensuring that the 'classID' entries correspond 
+        correctly to their new R-top times.
+    
+        Args:
+            line (object): The line object that represents the draggable R-top, 
+                           containing the original R-top time (origID) and other 
+                           properties.
+            new_x (float): The new R-top time to update at the closest index to 
+                           the original R-top time (line.origID).
+        '''
+        # Find the index of the R-top time closest to the original position
+        closest_idx = (data.ecg.RTopTimes - line.origID).abs().idxmin()
+        
+        # Retrieve the value of the closest R-top time for logging purposes
+        closest_value = data.ecg.RTopTimes.loc[closest_idx]
+                
+        # Update the R-top time at the closest index with the new value
+        data.ecg.RTopTimes.loc[closest_idx] = new_x
+        
+        # Sort the R-top times in ascending order and reset the index
+        sorted_indices = data.ecg.RTopTimes.argsort()
+        data.ecg.RTopTimes = data.ecg.RTopTimes[sorted_indices]
+        
+        # Reorder the 'classID' list to match the new order of RTopTimes
+        classID = pd.Series(data.ecg.classID)
+        data.ecg.classID = classID[sorted_indices].tolist()
+        
     line_handler = LineHandler(fig, ax_ecg, callback_drag=update_rtop_times)
-    area_handler = AreaHandler(fig, ax_ecg)    
+    #area_handler = AreaHandler(fig, ax_ecg)    
     positional_patch  = plot_overview(ax_overview, data.ecg.time, data.ecg.level,  x_min, x_max)
 
     # State variables for dragging
@@ -295,9 +326,10 @@ def spectplot(data, x_min=None, x_max=None):
 
     update_plot(x_min, x_max)
     # Connect the patch dragging events
-    fig.canvas.mpl_connect('button_press_event', on_press)
-    fig.canvas.mpl_connect('motion_notify_event', on_drag)
-    fig.canvas.mpl_connect('button_release_event', on_release)
+
+    bpe = fig.canvas.mpl_connect('button_press_event', on_press)
+    bod = fig.canvas.mpl_connect('motion_notify_event', on_drag)
+    bor = fig.canvas.mpl_connect('button_release_event', on_release)
 
     # Mode selection dropdown widget for interaction
     mode_select = widgets.Dropdown(

@@ -21,10 +21,25 @@ class DraggableVLine:
             callback_drag (callable, optional): Callback for when the line is dragged.
         """
         self.ax = ax
-        self.line = ax.axvline(x=x_position, color=color, linestyle=':', picker=True, alpha = .4)
+        self.origID = x_position
+        self.line = ax.axvline(x=x_position, color=color, linestyle='-.', picker=True, alpha = .7)
         self.callback_drag = callback_drag
         self.press = None
+        self.bpe = None
+        self.mne = None
+        self.bre = None
 
+    '''
+    @property
+    def origID(self):
+        return self._origID  # Read-only property
+
+    def __eq__(self, other):
+        return isinstance(other, DraggableVLine) and self.origID == other.origID
+
+    def __hash__(self):
+        return hash(self.origID)
+    '''
     def on_press(self, event):
         """
         Captures the initial click location if near the line.
@@ -48,22 +63,21 @@ class DraggableVLine:
             
         new_x = event.xdata
         self.line.set_xdata([new_x, new_x])
-        
-        # Callback with updated x-position if set
-        if self.callback_drag:
-            self.callback_drag(self, new_x)
-            
         plt.draw()
 
     def on_release(self, event):
         """
-        Releases the drag operation.
+        Releases the drag operation. Call the drag_callback with the new_x value
         
         Args:
             event (matplotlib.backend_bases.Event): The mouse release event.
         """
-        
-        self.press = None
+        if self.press:
+            self.press = None
+            # Callback with updated x-position if set
+            if self.callback_drag:
+                self.callback_drag(self, event.xdata)
+                self.origID = event.xdata
 
     def connect(self, fig):
         """
@@ -72,9 +86,9 @@ class DraggableVLine:
         Args:
             fig (matplotlib.figure.Figure): The figure in which to capture events.
         """
-        fig.canvas.mpl_connect('button_press_event', self.on_press)
-        fig.canvas.mpl_connect('motion_notify_event', self.on_drag)
-        fig.canvas.mpl_connect('button_release_event', self.on_release)
+        self.bpe = fig.canvas.mpl_connect('button_press_event', self.on_press)
+        self.mne = fig.canvas.mpl_connect('motion_notify_event', self.on_drag)
+        self.bre = fig.canvas.mpl_connect('button_release_event', self.on_release)
 
 class LineHandler:
     """
