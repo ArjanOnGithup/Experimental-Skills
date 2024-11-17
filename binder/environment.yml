@@ -4,8 +4,6 @@ channels:
   - conda-forge
   - anaconda
 dependencies:
-  - beautifulsoup4
-  - blosc
   - bokeh
   - catboost
   - conda
@@ -37,14 +35,13 @@ dependencies:
   - pillow
   - plotly
   - pyarrow
-  - pygwalker
   - python
+  - pyhrv
   - pyxdf  
   - requests
   - scikit-image
   - scikit-learn
   - scipy
-  - shiny
   - seaborn
   - snappy
   - statsmodels
