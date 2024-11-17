@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-
+import logging
 
 class DraggableVLine:
     """
@@ -22,9 +22,10 @@ class DraggableVLine:
         """
         self.ax = ax
         self.origID = x_position
-        self.line = ax.axvline(x=x_position, color=color, linestyle='-.', picker=True, alpha = .7)
+        self.line = ax.axvline(x=x_position, color=color, lw=1, linestyle='-.', picker=True, alpha = .7)
         self.callback_drag = callback_drag
         self.press = None
+
         self.bpe = None
         self.mne = None
         self.bre = None
@@ -47,10 +48,11 @@ class DraggableVLine:
         Args:
             event (matplotlib.backend_bases.Event): The mouse press event.
         """
-
+        logging.info("Press in Line")
         if self.line.contains(event)[0]:
             self.press = event.xdata
-
+            return
+        
     def on_drag(self, event):
         """
         Drags the line to follow the mouse's x position.

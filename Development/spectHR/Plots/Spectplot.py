@@ -10,8 +10,9 @@ import pdb
 from ..ui.LineHandler import LineHandler, AreaHandler
 import numpy as np
 import pandas as pd
+import logging
 
-out = widgets.Output()
+logging.basicConfig(level=logging.INFO)
 
 def spectplot(data, x_min=None, x_max=None):
     """
@@ -40,7 +41,6 @@ def spectplot(data, x_min=None, x_max=None):
         - x_min (float): Minimum x-axis limit for the zoomed view.
         - x_max (float): Maximum x-axis limit for the zoomed view.
         """
-        
         plot_ecg_signal(ax_ecg, data.ecg.time, data.ecg.level)
         # Plot R-top times if available in the data
         if hasattr(data.ecg, 'RTopTimes'):
@@ -48,7 +48,7 @@ def spectplot(data, x_min=None, x_max=None):
             visible_rtops = [(t, c) for t, c in sorted(zip(data.ecg.RTopTimes, data.ecg.classID))
                          if (x_min-1) <= t <= (x_max+1)]
             if visible_rtops:
-                if len(visible_rtops) < 60:
+                if len(visible_rtops) < 100:
                     plot_rtop_times(ax_ecg, visible_rtops, line_handler)  # Plot VLines in the current view
 
             ax_ecg.set_ylim(ax_ecg.get_ylim()[0], ax_ecg.get_ylim()[1] * 1.2)
@@ -69,20 +69,25 @@ def spectplot(data, x_min=None, x_max=None):
         Determines the area (left, right, or center) that is clicked for zoom adjustment.
         """
         nonlocal drag_mode, initial_xmin, initial_xmax
-        if event.inaxes != ax_overview:  # If click is outside the overview plot
-            return
-
-        # Check if the press is within the draggable region (x_min, x_max)
-        if x_min <= event.xdata <= x_max:
-            initial_xmin, initial_xmax = x_min, x_max
-            dist = x_max - x_min
-            # Determine drag mode based on proximity to the edges of the zoom box
-            if abs(event.xdata - x_min) < 0.3 * dist:
-                drag_mode = 'left'
-            elif abs(event.xdata - x_max) < 0.3 * dist:
-                drag_mode = 'right'
-            else:
-                drag_mode = 'center'
+        if event.inaxes == ax_overview:  # If click is on the overview plot
+            # Check if the press is within the draggable region (x_min, x_max)
+            if x_min <= event.xdata <= x_max:
+                initial_xmin, initial_xmax = x_min, x_max
+                dist = x_max - x_min
+                # Determine drag mode based on proximity to the edges of the zoom box
+                if abs(event.xdata - x_min) < 0.3 * dist:
+                    drag_mode = 'left'
+                elif abs(event.xdata - x_max) < 0.3 * dist:
+                    drag_mode = 'right'
+                else:
+                    drag_mode = 'center'
+        elif event.inaxes == ax_ecg:
+            if edit_mode=='Add':
+                line_handler.add_line(ax_ecg, event.xdata, 'red')
+                data.ecg.RTopTimes.add(event.xdata)
+                data.ecg.classID.append('N')
+                fig.canvas.draw_idle()
+                drag_mode = None
 
     def on_drag(event):
         """
@@ -90,34 +95,38 @@ def spectplot(data, x_min=None, x_max=None):
         Adjusts the x_min and x_max limits depending on where the mouse is dragged.
         """
         nonlocal x_min, x_max, drag_mode, initial_xmin, initial_xmax
-        if drag_mode is None or event.inaxes != ax_overview:  # If not in drag mode or outside the overview plot
-            return
+        if drag_mode is not None: 
+            if event.inaxes == ax_overview:  # If click is on the overview plot
+                # Adjust the zoom limits based on drag mode (left, right, or center)
+                if drag_mode == 'left':
+                    x_min = min(event.xdata, x_max - 0.1)
+                elif drag_mode == 'right':
+                    x_max = max(event.xdata, x_min + 0.1)
+                elif drag_mode == 'center':
+                    dx = event.xdata - 0.5 * (initial_xmin + initial_xmax)
+                    x_min = initial_xmin + dx
+                    x_max = initial_xmax + dx
 
-        # Adjust the zoom limits based on drag mode (left, right, or center)
-        if drag_mode == 'left':
-            x_min = min(event.xdata, x_max - 0.1)
-        elif drag_mode == 'right':
-            x_max = max(event.xdata, x_min + 0.1)
-        elif drag_mode == 'center':
-            dx = event.xdata - 0.5 * (initial_xmin + initial_xmax)
-            x_min = initial_xmin + dx
-            x_max = initial_xmax + dx
-
-        # Update the zoom box position
-        positional_patch.set_x(x_min)
-        positional_patch.set_width(x_max - x_min)
-        fig.canvas.draw_idle()
+                # Update the zoom box position
+                positional_patch.set_x(x_min)
+                positional_patch.set_width(x_max - x_min)
+                fig.canvas.draw_idle()
 
     def on_release(event):
-        """Resets the dragging mode upon mouse release."""
+        """
+        Resets the dragging mode upon mouse release.
+        """
         nonlocal drag_mode        
         drag_mode = None
         update_plot(x_min, x_max)
         fig.canvas.draw_idle()
 
     def update_mode(change):
-        """Update the mode in LineHandler based on dropdown selection."""      
-        line_handler.update_mode(change)
+        """
+        Update the mode in LineHandler based on dropdown selection.
+        """   
+        line_handler.update_mode(change['new'])
+        edit_mode = change['new']
 
 
     def create_figure_axes(data):
@@ -135,13 +144,13 @@ def spectplot(data, x_min=None, x_max=None):
         """
         if data.br is not None:
             fig, (ax_ecg, ax_overview, ax_br) = plt.subplots(
-                3, 1, figsize=(8, 6), sharex=True,
+                3, 1, figsize=(12,4), sharex=True,
                 gridspec_kw={'height_ratios': [4, 1, 3]}
             )
         else:
             fig, (ax_ecg, ax_overview) = plt.subplots(
-                2, 1, figsize=(8, 6), sharex=False,
-                gridspec_kw={'height_ratios': [11, 1]}
+                2, 1, figsize=(12,4), sharex=False,
+                gridspec_kw={'height_ratios': [6, 1]}
             )
             ax_br = None
 
@@ -199,7 +208,9 @@ def spectplot(data, x_min=None, x_max=None):
                 )
 
     def set_ecg_plot_properties(ax, x_min, x_max):
-        """Configure ECG plot properties."""
+        """
+        Configure ECG plot properties.
+        """
         ldisp = int(math.log10(abs(data.ecg.level.max()-data.ecg.level.min())))
         tdisp = round(math.log10(x_max-x_min),0)
         
@@ -224,48 +235,116 @@ def spectplot(data, x_min=None, x_max=None):
         ax.grid(True, 'minor', alpha = .2)
 
     def plot_ecg_signal(ax, ecg_time, ecg_level):
-        """Plot the ECG signal on the provided axis."""
+        """
+        Plot the ECG signal on the provided axis.
+        """
         ax.clear()
         ax.plot(ecg_time, ecg_level, label='ECG Signal', color='blue', linewidth = .7, alpha = .8)
 
     def plot_breathing_rate(ax, br_time, br_level, x_min, x_max, line_handler):
-        """Plot breathing rate data on a separate axis."""
+        """
+        Plot breathing rate data on a separate axis.
+        """
         ax.clear()
         ax.plot(br_time, br_level, label='Breathing Signal', color='green')
         ax.set_ylabel('Breathing Level')
         ax.grid(True)
-
-    def on_prev_clicked(button):
-        # find the first RTopTime with a non-'N' label, smaller then x_min
-        nonlocal x_min, x_max
-        x_range = x_max - x_min
-        idx = data.ecg.RTopTimes[(pd.Series(data.ecg.classID) == 'S') & (data.ecg.RTopTimes < (x_min))]
-        next_idx = idx.iloc[-1] if not idx.empty else None     
         
-        if next_idx is not None:
-            x_min = next_idx-(.5*x_range)
-            x_max = x_min + x_range
- 
+    # Callback navigational functions.
+    def update_view():
+        """
+        Updates the plot view by replotting data and adjusting the positional patch.
+        """
+        nonlocal x_min, x_max
         update_plot(x_min, x_max)
         positional_patch.set_x(x_min)
         positional_patch.set_width(x_max - x_min)
         fig.canvas.draw_idle()
-    
-    def on_nex_clicked(button):
-        # find the first RTopTime with a non-'N' label, smaller then x_min
-        nonlocal x_min, x_max            
+    def on_begin_clicked(button):
+        """
+        Moves the view to the start of the dataset.
+        """
+        nonlocal x_min, x_max
         x_range = x_max - x_min
-        idx = data.ecg.RTopTimes[(pd.Series(data.ecg.classID) == 'S') & (data.ecg.RTopTimes > (x_max))]
-        next_idx = idx.iloc[0] if not idx.empty else None     
+        x_min = data.ecg.time.iat[0]
+        x_max = x_min + x_range
+        update_view()
+    def on_left_clicked(button):
+        """
+        Moves the view one range-width to the left.
+        """
+        nonlocal x_min, x_max
+        x_range = x_max - x_min
+        x_min = max(data.ecg.time.iat[0], x_min - x_range)
+        x_max = x_min + x_range
+        update_view()
+    def on_prev_clicked(button):
+        """
+        Moves the view to center on the previous R-top with a specific label.
+        """
+        nonlocal x_min, x_max
+        x_range = x_max - x_min
+        idx = data.ecg.RTopTimes[
+            (pd.Series(data.ecg.classID) == 'S') & (data.ecg.RTopTimes < x_min)
+        ]
+        next_idx = idx.iloc[-1] if not idx.empty else None
         if next_idx is not None:
-            x_min = next_idx-(.5*x_range)
+            x_min = next_idx - (0.5 * x_range)
             x_max = x_min + x_range
-
-        positional_patch.set_x(x_min)
-        positional_patch.set_width(x_max - x_min)                
-        update_plot(x_min, x_max)
-        fig.canvas.draw_idle()
- 
+        update_view()
+    def on_wider_clicked(button):
+        """
+        Increases the view width by 1.5 times.
+        """
+        nonlocal x_min, x_max
+        x_range = (x_max - x_min) / 1.5
+        middle = (x_max + x_min) / 2
+        x_min = max(middle - x_range, data.ecg.time.iat[0])
+        x_max = min(x_min + (2 * x_range), data.ecg.time.iat[-1])
+        update_view()
+    def on_zoom_clicked(button):
+        """
+        Decreases the view width by 1/3 for zooming in.
+        """
+        nonlocal x_min, x_max
+        x_range = (x_max - x_min) / 3
+        middle = (x_max + x_min) / 2
+        x_min = middle - x_range
+        x_max = middle + x_range
+        update_view()
+    def on_nex_clicked(button):
+        """
+        Moves the view to center on the next R-top with a specific label.
+        """
+        nonlocal x_min, x_max
+        x_range = x_max - x_min
+        idx = data.ecg.RTopTimes[
+            (pd.Series(data.ecg.classID) != 'N') & (data.ecg.RTopTimes > x_max)
+        ]
+        next_idx = idx.iloc[0] if not idx.empty else None
+        if next_idx is not None:
+            x_min = next_idx - (0.5 * x_range)
+            x_max = x_min + x_range
+        update_view()
+    def on_right_clicked(button):
+        """
+        Moves the view one range-width to the right.
+        """
+        nonlocal x_min, x_max
+        x_range = x_max - x_min
+        x_min = min(data.ecg.time.iat[-1] - x_range, x_min + x_range)
+        x_max = x_min + x_range
+        update_view()
+    def on_end_clicked(button):
+        """
+        Moves the view to the end of the dataset.
+        """
+        nonlocal x_min, x_max
+        x_range = x_max - x_min
+        x_max = data.ecg.time.iat[-1]
+        x_min = x_max - x_range
+        update_view()
+    
     # Main Plot: Configure theme
     plt.ioff()
     plt.title('')
@@ -276,7 +355,7 @@ def spectplot(data, x_min=None, x_max=None):
 
     # Create figure and axis handles
     fig, ax_ecg, ax_overview, ax_br = create_figure_axes(data)
-    fig.set_figwidth(21) 
+    fig.set_figwidth(15) 
     fig.set_figheight(5) 
     fig.canvas.toolbar_visible = False
     fig.tight_layout()
@@ -338,16 +417,29 @@ def spectplot(data, x_min=None, x_max=None):
         description='Mode:',
         layout=widgets.Layout(width='200px')
     )
-
+    edit_mode = 'Drag'
     mode_select.observe(update_mode, names='value')
 
-    prev = widgets.Button(description="Previous")
-    nex = widgets.Button(description="Next")
+    begin = widgets.Button(icon = 'chevron-left')
+    left = widgets.Button(icon = 'arrow-left')
+    prev = widgets.Button(icon = "step-backward")
+    wider = widgets.Button(icon = 'search-minus')    
+    zoom = widgets.Button(icon = 'search-plus')    
+    nex = widgets.Button(icon = "step-forward")
+    right = widgets.Button(icon = 'arrow-right')
+    end = widgets.Button(icon = 'chevron-right')
     
+    begin.on_click(on_begin_clicked)
+    left.on_click(on_left_clicked)
     prev.on_click(on_prev_clicked)
+    wider.on_click(on_wider_clicked)
+    zoom.on_click(on_zoom_clicked)
     nex.on_click(on_nex_clicked)
+    right.on_click(on_right_clicked)
+    end.on_click(on_end_clicked)
     
-    anomaly = widgets.HBox([prev, nex])
+    anomaly = widgets.HBox([begin, left, prev, zoom, wider, nex, right, end],
+                    layout=widgets.Layout(justify_content='center', width='100%'))
     
     GUI = widgets.AppLayout(header=mode_select, 
                             left_sidebar=None, 
