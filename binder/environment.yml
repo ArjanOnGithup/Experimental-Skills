@@ -36,7 +36,6 @@ dependencies:
   - plotly
   - pyarrow
   - python
-  - pyhrv
   - pyxdf  
   - requests
   - scikit-image
@@ -49,4 +48,6 @@ dependencies:
   - xgboost
   - xlrd
   - xlwt
+  - pip:
+    - pyhrv
   
