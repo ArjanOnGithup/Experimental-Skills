@@ -33,6 +33,7 @@ dependencies:
   - openpyxl
   - pandas
   - pillow
+  - pip
   - plotly
   - pyarrow
   - python
