@@ -30,7 +30,7 @@ display(HTML("""
     flex-grow: 1;
 }
 </style>
-"""))
+""")) 
 '''
 logging.basicConfig(level = logging.INFO)
 
