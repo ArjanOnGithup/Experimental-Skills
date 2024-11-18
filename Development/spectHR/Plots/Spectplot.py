@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.ticker import MultipleLocator
 from matplotlib.patches import FancyArrowPatch
+import matplotlib
 
 import ipywidgets as widgets
 import math
@@ -12,9 +13,28 @@ import numpy as np
 import pandas as pd
 import logging
 
-logging.basicConfig(level=logging.INFO)
+'''
+from IPython.display import display, HTML
+# Ensure responsive output container for the Jupyter cell
+display(HTML("""
+<style>
+.jp-OutputArea-output {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    flex-grow: 1;
+}
+.widget-app-layout .app-layout-center {
+    width: 100% !important;
+    flex-grow: 1;
+}
+</style>
+"""))
+'''
+logging.basicConfig(level = logging.INFO)
 
-def spectplot(data, x_min=None, x_max=None):
+def spectplot(data, x_min = None, x_max = None):
     """
     Plot the heart rate data with interactive features for zooming, 
     dragging lines, and selecting modes for adding, removing, or finding R-top times.
@@ -82,7 +102,7 @@ def spectplot(data, x_min=None, x_max=None):
                 else:
                     drag_mode = 'center'
         elif event.inaxes == ax_ecg:
-            if edit_mode=='Add':
+            if edit_mode == 'Add':
                 line_handler.add_line(ax_ecg, event.xdata, 'red')
                 data.ecg.RTopTimes.add(event.xdata)
                 data.ecg.classID.append('N')
@@ -128,6 +148,14 @@ def spectplot(data, x_min=None, x_max=None):
         line_handler.update_mode(change['new'])
         edit_mode = change['new']
 
+        # Helper to get figure dimensions in inches
+    def calculate_figsize():
+        dpi = matplotlib.rcParams['figure.dpi']  # Get the current DPI setting
+        # Assume an approximate available width in pixels
+        available_width = 2048  # Adjust this to test with different screen sizes
+        width_in_inches = available_width / dpi
+        height_in_inches = 6  # Choose an appropriate height
+        return (width_in_inches, height_in_inches)
 
     def create_figure_axes(data):
         """
@@ -142,18 +170,18 @@ def spectplot(data, x_min=None, x_max=None):
         - ax_overview (Axes): Axis for the overview plot.
         - ax_br (Axes, optional): Axis for breathing rate if data is available.
         """
+        figsize = calculate_figsize()
         if data.br is not None:
             fig, (ax_ecg, ax_overview, ax_br) = plt.subplots(
-                3, 1, figsize=(12,4), sharex=True,
-                gridspec_kw={'height_ratios': [4, 1, 3]}
+                3, 1, figsize = figsize, sharex = True,
+                gridspec_kw = {'height_ratios': [4, 1, 3]}
             )
         else:
             fig, (ax_ecg, ax_overview) = plt.subplots(
-                2, 1, figsize=(12,4), sharex=False,
-                gridspec_kw={'height_ratios': [6, 1]}
+                2, 1, figsize=figsize, sharex = False,
+                gridspec_kw = {'height_ratios': [4, 1]}
             )
             ax_br = None
-
         return fig, ax_ecg, ax_overview, ax_br
 
     def plot_overview(ax, ecg_time, ecg_level, x_min, x_max):
@@ -163,10 +191,10 @@ def spectplot(data, x_min=None, x_max=None):
         ax.clear()
         ax.plot(ecg_time, ecg_level, color='green')
         ax.set_title('')
-            # Initialize a draggable patch for the overview plot
+        # Initialize a draggable patch for the overview plot
         positional_patch = patches.Rectangle((x_min, ax.get_ylim()[0]),
                                   x_max - x_min, ax.get_ylim()[1] - ax.get_ylim()[0],
-                                  color='blue', alpha=0.2, animated = False)
+                                  color = 'blue', alpha = 0.2, animated = False)
 
         ax.add_patch(positional_patch)
         ax.set_yticks([])  
@@ -186,50 +214,53 @@ def spectplot(data, x_min=None, x_max=None):
         ibis = np.append(np.diff(Rt), 0)
         RTOPS = zip(*zip(*vis_rtops), ibis)
         for rtop in tuple(RTOPS):
-            line_handler.add_line(ax, rtop[0], color=RTopColors[rtop[1]])
+            line_handler.add_line(ax, rtop[0], color = RTopColors[rtop[1]])
             if rtop[2] != 0:
                 #Draw a double-sided arrow from the current R-top to the next
                 arrow = FancyArrowPatch((rtop[0], h), 
-                                        (rtop[0]+rtop[2], h), 
-                                        arrowstyle='<->', 
-                                        color='blue', 
-                                        mutation_scale=15, 
-                                        linewidth=.5)
+                                        (rtop[0] + rtop[2], h), 
+                                        arrowstyle = '<->', 
+                                        color = 'blue', 
+                                        mutation_scale = 15, 
+                                        linewidth = .5)
                 ax.add_patch(arrow)
     
                 ax.text(
-                    rtop[0]+(.5*rtop[2]), 
+                    rtop[0] + (.5 * rtop[2]), 
                     h,  # Offset above the plot
-                    f"{1000*rtop[2]:.0f}", fontsize=6, rotation = 0,
-                    horizontalalignment='center', 
-                    verticalalignment='bottom', 
-                    color='blue', 
-                    bbox=dict(facecolor = ax.get_facecolor(), edgecolor = ax.get_facecolor(), alpha = .4)
+                    f"{1000 * rtop[2]:.0f}", fontsize = 6, rotation = 0,
+                    horizontalalignment = 'center', 
+                    verticalalignment = 'bottom', 
+                    color = 'blue', 
+                    bbox = dict(facecolor = ax.get_facecolor(), 
+                                edgecolor = ax.get_facecolor(), 
+                                alpha = .4)
                 )
 
     def set_ecg_plot_properties(ax, x_min, x_max):
         """
         Configure ECG plot properties.
         """
-        ldisp = int(math.log10(abs(data.ecg.level.max()-data.ecg.level.min())))
-        tdisp = round(math.log10(x_max-x_min),0)
+        ldisp = int(math.log10(abs(data.ecg.level.max() - data.ecg.level.min())))
+        tdisp = round(math.log10(x_max - x_min), 0)
         
         ax.set_title('')
         ax.set_xlabel('Time (seconds)')
         #ax.set_ylabel('ECG Level (mV)')
         ax.set_xlim(x_min, x_max)
         
-        ax.xaxis.set_major_locator(MultipleLocator(math.pow(10,tdisp-1)))  # Major ticks every 1 second
-        ax.xaxis.set_minor_locator(MultipleLocator(math.pow(10,tdisp-1)/5))  # Minor ticks every 0.2 seconds
+        ax.xaxis.set_major_locator(MultipleLocator(math.pow(10, tdisp - 1)))  # Major ticks every 1 second
+        ax.xaxis.set_minor_locator(MultipleLocator(math.pow(10, tdisp - 1) / 5))  # Minor ticks every 0.2 seconds
         #ax.xaxis.set_minor_locator(AutoMinorLocator())  # Minor ticks every 0.2 seconds
 
-        ax.yaxis.set_major_locator(MultipleLocator(math.pow(10,ldisp))) 
-        ax.yaxis.set_minor_locator(MultipleLocator(math.pow(10,ldisp)/5))
-
-        ax.xaxis.grid(which='minor', color='salmon', lw=0.3)
-        ax.xaxis.grid(which='major', color='r', lw=0.7)
-        ax.yaxis.grid(which='minor', color='salmon', lw=0.3)
-        ax.yaxis.grid(which='major', color='r', lw=0.7)
+        ax.yaxis.set_major_locator(MultipleLocator(math.pow(10, ldisp))) 
+        ax.yaxis.set_minor_locator(MultipleLocator(math.pow(10, ldisp) / 5))
+        # Remove y-axis ticks but keep the grid
+        ax.set_yticks([])
+        ax.xaxis.grid(which = 'minor', color = 'salmon', lw = 0.3)
+        ax.xaxis.grid(which = 'major', color = 'r', lw = 0.7)
+        ax.yaxis.grid(which = 'minor', color = 'salmon', lw = 0.3)
+        ax.yaxis.grid(which = 'major', color = 'r', lw = 0.7)
         
         ax.grid(True, 'major', alpha = .3)
         ax.grid(True, 'minor', alpha = .2)
@@ -239,7 +270,7 @@ def spectplot(data, x_min=None, x_max=None):
         Plot the ECG signal on the provided axis.
         """
         ax.clear()
-        ax.plot(ecg_time, ecg_level, label='ECG Signal', color='blue', linewidth = .7, alpha = .8)
+        ax.plot(ecg_time, ecg_level, label = 'ECG Signal', color = 'blue', linewidth = .7, alpha = .8)
 
     def plot_breathing_rate(ax, br_time, br_level, x_min, x_max, line_handler):
         """
@@ -260,6 +291,7 @@ def spectplot(data, x_min=None, x_max=None):
         positional_patch.set_x(x_min)
         positional_patch.set_width(x_max - x_min)
         fig.canvas.draw_idle()
+        
     def on_begin_clicked(button):
         """
         Moves the view to the start of the dataset.
@@ -269,6 +301,7 @@ def spectplot(data, x_min=None, x_max=None):
         x_min = data.ecg.time.iat[0]
         x_max = x_min + x_range
         update_view()
+        
     def on_left_clicked(button):
         """
         Moves the view one range-width to the left.
@@ -278,6 +311,7 @@ def spectplot(data, x_min=None, x_max=None):
         x_min = max(data.ecg.time.iat[0], x_min - x_range)
         x_max = x_min + x_range
         update_view()
+        
     def on_prev_clicked(button):
         """
         Moves the view to center on the previous R-top with a specific label.
@@ -292,6 +326,7 @@ def spectplot(data, x_min=None, x_max=None):
             x_min = next_idx - (0.5 * x_range)
             x_max = x_min + x_range
         update_view()
+        
     def on_wider_clicked(button):
         """
         Increases the view width by 1.5 times.
@@ -302,6 +337,7 @@ def spectplot(data, x_min=None, x_max=None):
         x_min = max(middle - x_range, data.ecg.time.iat[0])
         x_max = min(x_min + (2 * x_range), data.ecg.time.iat[-1])
         update_view()
+        
     def on_zoom_clicked(button):
         """
         Decreases the view width by 1/3 for zooming in.
@@ -312,6 +348,7 @@ def spectplot(data, x_min=None, x_max=None):
         x_min = middle - x_range
         x_max = middle + x_range
         update_view()
+        
     def on_nex_clicked(button):
         """
         Moves the view to center on the next R-top with a specific label.
@@ -326,6 +363,7 @@ def spectplot(data, x_min=None, x_max=None):
             x_min = next_idx - (0.5 * x_range)
             x_max = x_min + x_range
         update_view()
+        
     def on_right_clicked(button):
         """
         Moves the view one range-width to the right.
@@ -335,6 +373,7 @@ def spectplot(data, x_min=None, x_max=None):
         x_min = min(data.ecg.time.iat[-1] - x_range, x_min + x_range)
         x_max = x_min + x_range
         update_view()
+        
     def on_end_clicked(button):
         """
         Moves the view to the end of the dataset.
@@ -355,9 +394,9 @@ def spectplot(data, x_min=None, x_max=None):
 
     # Create figure and axis handles
     fig, ax_ecg, ax_overview, ax_br = create_figure_axes(data)
-    fig.set_figwidth(15) 
-    fig.set_figheight(5) 
+    
     fig.canvas.toolbar_visible = False
+    fig.canvas.header_visible = False
     fig.tight_layout()
     
     # Callback to update R-top times upon dragging a line
@@ -412,14 +451,20 @@ def spectplot(data, x_min=None, x_max=None):
 
     # Mode selection dropdown widget for interaction
     mode_select = widgets.Dropdown(
-        options=['Drag', 'Add', 'Find', 'Remove'],
-        value='Drag',
-        description='Mode:',
-        layout=widgets.Layout(width='200px')
+        options = ['Drag', 'Add', 'Find', 'Remove'],
+        value = 'Drag',
+        description = 'Mode:',
+        layout=widgets.Layout(width = '200px')
     )
+    
     edit_mode = 'Drag'
-    mode_select.observe(update_mode, names='value')
-
+    mode_select.observe(update_mode, names = 'value')
+    figure_title = widgets.HTML(value='<center><H2>ECG signal</H2></center>', layout=widgets.Layout(width = '100%', justify_content = 'center'))
+    spacer = widgets.Label(value='', layout=widgets.Layout(width = '200px'))
+    header = widgets.HBox([mode_select, figure_title, spacer ], layout=widgets.Layout(justify_content = 'center', width = '100%'))
+    '''
+    Create navigation Buttons. These are used to navigate through the dataset
+    '''
     begin = widgets.Button(icon = 'chevron-left')
     left = widgets.Button(icon = 'arrow-left')
     prev = widgets.Button(icon = "step-backward")
@@ -428,7 +473,10 @@ def spectplot(data, x_min=None, x_max=None):
     nex = widgets.Button(icon = "step-forward")
     right = widgets.Button(icon = 'arrow-right')
     end = widgets.Button(icon = 'chevron-right')
-    
+
+    '''
+    Add the callbacks to the buttons.
+    '''
     begin.on_click(on_begin_clicked)
     left.on_click(on_left_clicked)
     prev.on_click(on_prev_clicked)
@@ -437,17 +485,26 @@ def spectplot(data, x_min=None, x_max=None):
     nex.on_click(on_nex_clicked)
     right.on_click(on_right_clicked)
     end.on_click(on_end_clicked)
-    
-    anomaly = widgets.HBox([begin, left, prev, zoom, wider, nex, right, end],
-                    layout=widgets.Layout(justify_content='center', width='100%'))
-    
-    GUI = widgets.AppLayout(header=mode_select, 
-                            left_sidebar=None, 
-                            center=fig.canvas, 
-                            right_sidebar=None, 
-                            footer=anomaly, pane_heights = [1, 10, 1])
-    # Initialize plot
-    #update_plot(x_min, x_max)
+
+    '''
+    Create the navigation HBox
+    '''
+    navigator = widgets.HBox([begin, left, prev, zoom, wider, nex, right, end],
+                    layout=widgets.Layout(justify_content = 'center', width = '100%'))
+
+    '''
+    Embed the Matplotlib figure in the AppLayout
+    Create the GUI
+    '''
+    GUI = widgets.AppLayout(header = header, 
+                            left_sidebar = None, 
+                            center = widgets.Output(), 
+                            right_sidebar = None, 
+                            footer  = navigator, 
+                            pane_heights = [1,10,1])
+    with GUI.center:
+        display(fig.canvas)
+
     fig.canvas.draw_idle()
 
     # Control box for displaying controls and plot
