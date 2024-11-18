@@ -42,6 +42,7 @@ dependencies:
   - snappy
   - statsmodels
   - voila
+  - voila-gridstack
   - xgboost
   - xlrd
   - xlwt
