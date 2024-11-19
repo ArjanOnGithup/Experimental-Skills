@@ -14,25 +14,6 @@ import numpy as np
 import pandas as pd
 import logging
 
-'''
-from IPython.display import display, HTML
-# Ensure responsive output container for the Jupyter cell
-display(HTML("""
-<style>
-.jp-OutputArea-output {
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    width: 100% !important;
-    flex-grow: 1;
-}
-.widget-app-layout .app-layout-center {
-    width: 100% !important;
-    flex-grow: 1;
-}
-</style>
-""")) 
-'''
 logging.basicConfig(level = logging.ERROR)
 
 def spectplot(data, x_min = None, x_max = None):
@@ -50,8 +31,7 @@ def spectplot(data, x_min = None, x_max = None):
     - Adjustable zoom region using the overview plot.
     - Mode selection for dragging, adding, finding, or removing R-top times.
     """
-    
-     # Local Functions:
+    # Local Functions:
     RTopColors = {'N': 'green', 'L': 'cyan', 'S': 'magenta', 'T': 'orange', '1': 'turquoise', '2': 'lightseagreen'}    
     def update_plot(x_min, x_max):
         """
@@ -149,15 +129,11 @@ def spectplot(data, x_min = None, x_max = None):
         line_handler.update_mode(change['new'])
         edit_mode = change['new']
 
-        # Helper to get figure dimensions in inches
+    # Helper to get figure dimensions in inches
     def calculate_figsize():
         dpi = matplotlib.rcParams['figure.dpi']  # Get the current DPI setting
-        # Assume an approximate available width in pixels
-        available_width = 2048  # Adjust this to test with different screen sizes
-        width_in_inches = available_width / dpi
-        height_in_inches = 6  # Choose an appropriate height
-        return (width_in_inches, height_in_inches)
-
+        return (2048/dpi, 640/dpi)
+    
     def create_figure_axes(data):
         """
         Create and return figure and axes for ECG and optional breathing data.
@@ -171,7 +147,9 @@ def spectplot(data, x_min = None, x_max = None):
         - ax_overview (Axes): Axis for the overview plot.
         - ax_br (Axes, optional): Axis for breathing rate if data is available.
         """
-        figsize = calculate_figsize()
+        
+        figsize=calculate_figsize()
+        
         if data.br is not None:
             fig, (ax_ecg, ax_overview, ax_br) = plt.subplots(
                 3, 1, figsize = figsize, sharex = True,
@@ -392,7 +370,7 @@ def spectplot(data, x_min = None, x_max = None):
     # Initialize x-axis limits based on input or data
     x_min = x_min if x_min is not None else data.ecg.time.min()
     x_max = x_max if x_max is not None else data.ecg.time.max()
-
+   
     # Create figure and axis handles
     fig, ax_ecg, ax_overview, ax_br = create_figure_axes(data)
     
@@ -526,7 +504,7 @@ def spectplot(data, x_min = None, x_max = None):
                             center = widgets.Output(), 
                             right_sidebar = None, 
                             footer  = navigator, 
-                            pane_heights = [1,10,1])
+                            pane_heights = [1,8,1])
     with GUI.center:
         display(fig.canvas)
 
