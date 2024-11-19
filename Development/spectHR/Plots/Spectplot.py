@@ -132,7 +132,7 @@ def spectplot(data, x_min = None, x_max = None):
     # Helper to get figure dimensions in inches
     def calculate_figsize():
         dpi = matplotlib.rcParams['figure.dpi']  # Get the current DPI setting
-        return (2048/dpi, 640/dpi)
+        return (2048/dpi, 410/dpi)
     
     def create_figure_axes(data):
         """
@@ -153,7 +153,7 @@ def spectplot(data, x_min = None, x_max = None):
         if data.br is not None:
             fig, (ax_ecg, ax_overview, ax_br) = plt.subplots(
                 3, 1, figsize = figsize, sharex = True,
-                gridspec_kw = {'height_ratios': [4, 1, 3]}
+                gridspec_kw = {'height_ratios': [4, 1, 2]}
             )
         else:
             fig, (ax_ecg, ax_overview) = plt.subplots(
@@ -504,12 +504,12 @@ def spectplot(data, x_min = None, x_max = None):
                             center = widgets.Output(), 
                             right_sidebar = None, 
                             footer  = navigator, 
-                            pane_heights = [1,8,1])
+                            pane_heights = [1,5,1])
     with GUI.center:
         display(fig.canvas)
 
     fig.canvas.draw_idle()
 
     # Control box for displaying controls and plot
-    return(GUI)
+    return(GUI, header, fig, navigator)
 
