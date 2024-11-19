@@ -8,13 +8,9 @@ dependencies:
   - catboost
   - conda
   - conda-pack
-  - dask
   - datashader
-  - fastparquet
   - feather-format
   - gdown
-  - gensim
-  - h5py
   - html5lib
   - htmltools
   - ipython
@@ -46,6 +42,7 @@ dependencies:
   - snappy
   - statsmodels
   - voila
+  - voila-gridstack
   - xgboost
   - xlrd
   - xlwt
