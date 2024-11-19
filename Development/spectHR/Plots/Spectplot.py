@@ -3,6 +3,7 @@ import matplotlib.patches as patches
 from matplotlib.ticker import MultipleLocator
 from matplotlib.patches import FancyArrowPatch
 import matplotlib
+import ipyvuetify as v
 
 import ipywidgets as widgets
 import math
@@ -32,7 +33,7 @@ display(HTML("""
 </style>
 """)) 
 '''
-logging.basicConfig(level = logging.INFO)
+logging.basicConfig(level = logging.ERROR)
 
 def spectplot(data, x_min = None, x_max = None):
     """
@@ -141,7 +142,7 @@ def spectplot(data, x_min = None, x_max = None):
         update_plot(x_min, x_max)
         fig.canvas.draw_idle()
 
-    def update_mode(change):
+    def update_mode(change, e, d):
         """
         Update the mode in LineHandler based on dropdown selection.
         """   
@@ -292,7 +293,7 @@ def spectplot(data, x_min = None, x_max = None):
         positional_patch.set_width(x_max - x_min)
         fig.canvas.draw_idle()
         
-    def on_begin_clicked(button):
+    def on_begin_clicked(button, e, d):
         """
         Moves the view to the start of the dataset.
         """
@@ -302,7 +303,7 @@ def spectplot(data, x_min = None, x_max = None):
         x_max = x_min + x_range
         update_view()
         
-    def on_left_clicked(button):
+    def on_left_clicked(button, e, d):
         """
         Moves the view one range-width to the left.
         """
@@ -312,7 +313,7 @@ def spectplot(data, x_min = None, x_max = None):
         x_max = x_min + x_range
         update_view()
         
-    def on_prev_clicked(button):
+    def on_prev_clicked(button, e, d):
         """
         Moves the view to center on the previous R-top with a specific label.
         """
@@ -327,7 +328,7 @@ def spectplot(data, x_min = None, x_max = None):
             x_max = x_min + x_range
         update_view()
         
-    def on_wider_clicked(button):
+    def on_wider_clicked(button, e, d):
         """
         Increases the view width by 1.5 times.
         """
@@ -338,7 +339,7 @@ def spectplot(data, x_min = None, x_max = None):
         x_max = min(x_min + (2 * x_range), data.ecg.time.iat[-1])
         update_view()
         
-    def on_zoom_clicked(button):
+    def on_zoom_clicked(button, e, d):
         """
         Decreases the view width by 1/3 for zooming in.
         """
@@ -349,7 +350,7 @@ def spectplot(data, x_min = None, x_max = None):
         x_max = middle + x_range
         update_view()
         
-    def on_nex_clicked(button):
+    def on_nex_clicked(button, e, d):
         """
         Moves the view to center on the next R-top with a specific label.
         """
@@ -364,7 +365,7 @@ def spectplot(data, x_min = None, x_max = None):
             x_max = x_min + x_range
         update_view()
         
-    def on_right_clicked(button):
+    def on_right_clicked(button, e, d):
         """
         Moves the view one range-width to the right.
         """
@@ -374,7 +375,7 @@ def spectplot(data, x_min = None, x_max = None):
         x_max = x_min + x_range
         update_view()
         
-    def on_end_clicked(button):
+    def on_end_clicked(button, e, d):
         """
         Moves the view to the end of the dataset.
         """
@@ -450,20 +451,43 @@ def spectplot(data, x_min = None, x_max = None):
     bor = fig.canvas.mpl_connect('button_release_event', on_release)
 
     # Mode selection dropdown widget for interaction
+    '''
     mode_select = widgets.Dropdown(
         options = ['Drag', 'Add', 'Find', 'Remove'],
         value = 'Drag',
         description = 'Mode:',
         layout=widgets.Layout(width = '200px')
     )
-    
+    '''
+    mode_select = v.Select(color='primary', class_='ma-2', label = "Mode", items = ['Drag', 'Add', 'Find', 'Remove'])
+    mode_select.on_event('change', update_mode)
     edit_mode = 'Drag'
-    mode_select.observe(update_mode, names = 'value')
+    # mode_select.observe(update_mode, names = 'value')
+    
     figure_title = widgets.HTML(value='<center><H2>ECG signal</H2></center>', layout=widgets.Layout(width = '100%', justify_content = 'center'))
     spacer = widgets.Label(value='', layout=widgets.Layout(width = '200px'))
     header = widgets.HBox([mode_select, figure_title, spacer ], layout=widgets.Layout(justify_content = 'center', width = '100%'))
     '''
     Create navigation Buttons. These are used to navigate through the dataset
+    '''
+    begin = v.Btn(color='primary', class_='ma-2', children=[v.Icon(left=True, children=['fa-chevron-left'])])
+    left = v.Btn(color='primary', class_='ma-2', children=[v.Icon(left=True, children=['fa-arrow-left'])])
+    prev = v.Btn(color='primary', class_='ma-2', children=[v.Icon(left=True, children=["fa-step-backward"])])
+    wider = v.Btn(color='primary', class_='ma-2', children=[v.Icon(left=True, children=['fa-search-minus'])])  
+    zoom = v.Btn(color='primary', class_='ma-2', children=[v.Icon(left=True, children=['fa-search-plus'])])    
+    nex = v.Btn(color='primary', class_='ma-2', children=[v.Icon(left=True, children=["fa-step-forward"])])
+    right = v.Btn(color='primary', class_='ma-2', children=[v.Icon(left=True, children=['fa-arrow-right'])])
+    end = v.Btn(color='primary', class_='ma-2', children=[v.Icon(left=True, children=['fa-chevron-right'])])
+
+    begin.on_event('click', on_begin_clicked)
+    left.on_event('click', on_left_clicked)
+    prev.on_event('click', on_prev_clicked)
+    wider.on_event('click', on_wider_clicked)
+    zoom.on_event('click', on_zoom_clicked)
+    nex.on_event('click', on_nex_clicked)
+    right.on_event('click', on_right_clicked)
+    end.on_event('click', on_end_clicked)
+    
     '''
     begin = widgets.Button(icon = 'chevron-left')
     left = widgets.Button(icon = 'arrow-left')
@@ -473,9 +497,10 @@ def spectplot(data, x_min = None, x_max = None):
     nex = widgets.Button(icon = "step-forward")
     right = widgets.Button(icon = 'arrow-right')
     end = widgets.Button(icon = 'chevron-right')
-
+    '''
     '''
     Add the callbacks to the buttons.
+    '''
     '''
     begin.on_click(on_begin_clicked)
     left.on_click(on_left_clicked)
@@ -485,7 +510,7 @@ def spectplot(data, x_min = None, x_max = None):
     nex.on_click(on_nex_clicked)
     right.on_click(on_right_clicked)
     end.on_click(on_end_clicked)
-
+    '''
     '''
     Create the navigation HBox
     '''
