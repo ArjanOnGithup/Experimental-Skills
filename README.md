@@ -54,10 +54,10 @@ GUI = cs.spectplot(DataSet)  # Plot ECG with draggable R-top lines
 
 ### Available Modes
 
-Drag: Move the vertical lines (R-tops) along the x-axis to adjust detection.
-Remove: Select and remove individual R-tops by clicking on the lines.
-Add: Add a new R-top at a specific location on the plot.
-Find: Identify peaks within a selected x-range.
+- Drag: Move the vertical lines (R-tops) along the x-axis to adjust detection.
+- Remove: Select and remove individual R-tops by clicking on the lines.
+- Add: Add a new R-top at a specific location on the plot.
+- Find: Identify peaks within a selected x-range.
 
 This will allow you to interact with the ECG plot, dragging R-top lines and updating the dataset accordingly.
 
