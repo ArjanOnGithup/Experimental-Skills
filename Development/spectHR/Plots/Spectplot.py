@@ -511,5 +511,5 @@ def spectplot(data, x_min = None, x_max = None):
     fig.canvas.draw_idle()
 
     # Control box for displaying controls and plot
-    return(GUI, header, fig, navigator)
+    return(GUI)
 
