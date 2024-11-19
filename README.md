@@ -31,7 +31,6 @@ pip install spectHR
 Or, if you're developing locally, clone the repository and install it in editable mode:
 
 ```bash
-Copy code
 git clone https://github.com/yourusername/spectHR.git
 cd spectHR
 pip install -e .
