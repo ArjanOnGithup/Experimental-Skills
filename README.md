@@ -19,6 +19,7 @@
 - Python 3.7+
 - Jupyter notebook or JupyterLab
 - ipywidgets
+- ipyvuetify (for nicer looking widgets)
 - Voilà (for interactive visualization)
 
 ### Install the library
