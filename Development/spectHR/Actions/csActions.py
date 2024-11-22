@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import copy
 import scipy.signal as signal
-
+from ..Tools.Logger import logger, handler
 
 def calcPeaks(DataSet, par=None):
     """
@@ -24,7 +24,7 @@ def calcPeaks(DataSet, par=None):
         'Classify': True
     }
 
-      # Merge passed par with default if any
+    # Merge passed par with default if any
     if par is None:
         par = default_par
     else:
@@ -60,7 +60,7 @@ def calcPeaks(DataSet, par=None):
     correction = (post - pre) / par['fSample'] / 2.0 / np.abs(rc)
     
     # Print the number of detected R-tops for logging purposes
-    # print(f"Found {len(locs)} r-tops")
+    logger.info(f"Found {len(locs)} r-tops")
 
     # Step 7: Update the dataset's RTopTimes with the time stamps corresponding to the detected peaks
     DS.ecg.RTopTimes = DS.ecg.time.iloc[locs] + correction
@@ -69,7 +69,6 @@ def calcPeaks(DataSet, par=None):
     DS.ecg.ibi = np.diff(DS.ecg.RTopTimes)
     # Log the action
     DS.log_action('calcPeaks', par)
-    
     # Step 8: If warrented: classify and label the peaks 
     if par['Classify']:
         classify(DS)
@@ -136,7 +135,7 @@ def filterECGData(DataSet, par=None):
     # Log the action
     DS.log_action('filterData', par)
 
-    #print(f"Data filtered with a {par['filterType']} filter (cutoff = {par['cutoff']} Hz).")
+    logger.info(f"Data filtered with a {par['filterType']} filter (cutoff = {par['cutoff']} Hz).")
     return DS
 
 import copy
@@ -169,7 +168,7 @@ def borderData(DataSet, par=None):
         # Get the first and last event timestamps
         first_event_time = DS.events['timestamp'].iloc[0]-1
         last_event_time = DS.events['timestamp'].iloc[-1]+1
-        #print(f'Slicing from {first_event_time} to {last_event_time}')
+        logger.info(f'Slicing from {first_event_time} to {last_event_time}')
         # Slice TimeSeries based on the first and last event times
         if DS.ecg is not None:
             DS.ecg = DS.ecg.slicetime(first_event_time, last_event_time)
@@ -232,6 +231,6 @@ def classify(DataSet, par=None):
     unique_ids = set(classID)
     for id in unique_ids:
         count = classID.count(id)
-        #print(f"Found {count} {id} rtops")
+        logger.info(f"Found {count} {id} rtops")
 
     return DataSet.ecg.classID

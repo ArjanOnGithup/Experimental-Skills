@@ -168,7 +168,7 @@ def spectplot(data, x_min = None, x_max = None):
         Plots the ECG signal on an overview plot with a shaded rectangle indicating the zoom region.
         """
         ax.clear()
-        ax.plot(ecg_time, ecg_level, color='green')
+        ax.plot(ecg_time, ecg_level, linewidth = .25, alpha = .5, color='green')
         ax.set_title('')
         # Initialize a draggable patch for the overview plot
         positional_patch = patches.Rectangle((x_min, ax.get_ylim()[0]),
@@ -448,15 +448,15 @@ def spectplot(data, x_min = None, x_max = None):
     '''
     Create navigation Buttons. These are used to navigate through the dataset
     '''
-    begin = v.Btn(color='primary', class_='ma-2', children=[v.Icon(left=True, children=['fa-chevron-left'])])
+    begin = v.Btn(color='primary', class_='ma-2', children=[v.Icon(left=True, children=['fa-step-backward'])])
     left = v.Btn(color='primary', class_='ma-2', children=[v.Icon(left=True, children=['fa-arrow-left'])])
-    prev = v.Btn(color='primary', class_='ma-2', children=[v.Icon(left=True, children=["fa-step-backward"])])
+    prev = v.Btn(color='primary', class_='ma-2', children=[v.Icon(left=True, children=["fa-chevron-left"])])
     wider = v.Btn(color='primary', class_='ma-2', children=[v.Icon(left=True, children=['fa-search-minus'])])  
     zoom = v.Btn(color='primary', class_='ma-2', children=[v.Icon(left=True, children=['fa-search-plus'])])    
-    nex = v.Btn(color='primary', class_='ma-2', children=[v.Icon(left=True, children=["fa-step-forward"])])
+    nex = v.Btn(color='primary', class_='ma-2', children=[v.Icon(left=True, children=["fa-chevron-right"])])
     right = v.Btn(color='primary', class_='ma-2', children=[v.Icon(left=True, children=['fa-arrow-right'])])
-    end = v.Btn(color='primary', class_='ma-2', children=[v.Icon(left=True, children=['fa-chevron-right'])])
-
+    end = v.Btn(color='primary', class_='ma-2', children=[v.Icon(left=True, children=['fa-step-forward'])])
+    #v.Btn(color='primary', children=[v.Icon(left=True, children=['mdi-email-edit-outline']),'Click me'])
     begin.on_event('click', on_begin_clicked)
     left.on_event('click', on_left_clicked)
     prev.on_event('click', on_prev_clicked)
@@ -493,7 +493,7 @@ def spectplot(data, x_min = None, x_max = None):
     Create the navigation HBox
     '''
     navigator = widgets.HBox([begin, left, prev, zoom, wider, nex, right, end],
-                    layout=widgets.Layout(justify_content = 'center', width = '100%'))
+                    layout=widgets.Layout(justify_content = 'center', width = '100%', border = '0px solid green'))
 
     '''
     Embed the Matplotlib figure in the AppLayout
@@ -501,7 +501,7 @@ def spectplot(data, x_min = None, x_max = None):
     '''
     GUI = widgets.AppLayout(header = header, 
                             left_sidebar = None, 
-                            center = widgets.Output(), 
+                            center = widgets.Output(layout = widgets.Layout(margin ='0 0 0 0', padding = '0 0 0 0', border = '0px solid red')), 
                             right_sidebar = None, 
                             footer  = navigator, 
                             pane_heights = [1,5,1])

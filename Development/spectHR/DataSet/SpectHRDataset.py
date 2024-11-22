@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import pyxdf
 from datetime import datetime
-
+from ..Tools.Logger import logger, handler
 
 class TimeSeries:
     """
@@ -95,6 +95,7 @@ class SpectHRDataset:
         self.history = []
         self.par = par if par is not None else {}
         self.starttime = None
+        logger.info(f'Loading "{filename}"')
 
         self.loadData(filename, ecg_index, br_index, event_index)
 
