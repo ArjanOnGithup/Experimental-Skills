@@ -9,14 +9,13 @@ import ipywidgets as widgets
 import math
 import pdb
 
-from ..ui.LineHandler import LineHandler, AreaHandler
+from spectHR.ui.LineHandler import LineHandler, AreaHandler
+from spectHR.Tools.Logger import logger
+
 import numpy as np
 import pandas as pd
-import logging
 
-logging.basicConfig(level = logging.ERROR)
-
-def spectplot(data, x_min = None, x_max = None):
+def prepPlot(data, x_min = None, x_max = None):
     """
     Plot the heart rate data with interactive features for zooming, 
     dragging lines, and selecting modes for adding, removing, or finding R-top times.
@@ -32,6 +31,7 @@ def spectplot(data, x_min = None, x_max = None):
     - Mode selection for dragging, adding, finding, or removing R-top times.
     """
     # Local Functions:
+    logger.info(f'Created a prepPlot')
     RTopColors = {'N': 'green', 'L': 'cyan', 'S': 'magenta', 'T': 'orange', '1': 'turquoise', '2': 'lightseagreen'}    
     def update_plot(x_min, x_max):
         """
@@ -132,7 +132,7 @@ def spectplot(data, x_min = None, x_max = None):
     # Helper to get figure dimensions in inches
     def calculate_figsize():
         dpi = matplotlib.rcParams['figure.dpi']  # Get the current DPI setting
-        return (2048/dpi, 410/dpi)
+        return (1024/dpi, 370/dpi)
     
     def create_figure_axes(data):
         """
@@ -505,6 +505,7 @@ def spectplot(data, x_min = None, x_max = None):
                             right_sidebar = None, 
                             footer  = navigator, 
                             pane_heights = [1,5,1])
+    
     with GUI.center:
         display(fig.canvas)
 

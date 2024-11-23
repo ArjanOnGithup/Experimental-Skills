@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import pyxdf
 from datetime import datetime
-from ..Tools.Logger import logger, handler
+from spectHR.Tools.Logger import logger, handler
 
 class TimeSeries:
     """

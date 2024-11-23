@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-import logging
+from spectHR.Tools.Logger import logger
 
 class DraggableVLine:
     """
@@ -48,7 +48,7 @@ class DraggableVLine:
         Args:
             event (matplotlib.backend_bases.Event): The mouse press event.
         """
-        logging.info("Press in Line")
+        logger.info("Press in Line")
         if self.line.contains(event)[0]:
             self.press = event.xdata
             return

@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import copy
 import scipy.signal as signal
-from ..Tools.Logger import logger, handler
+from spectHR.Tools.Logger import logger, handler
 
 def calcPeaks(DataSet, par=None):
     """
