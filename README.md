@@ -50,7 +50,7 @@ DataSet = cs.calcPeaks(DataSet)
 Once the data is loaded, you can visualize it with interactive plots:
 
 ```python
-GUI = cs.spectplot(DataSet)  # Plot ECG with draggable R-top lines
+GUI = cs.prepPlot(DataSet)  # Plot ECG with draggable R-top lines
 ```
 
 ### Available Modes
