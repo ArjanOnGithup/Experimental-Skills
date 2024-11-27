@@ -98,7 +98,7 @@ def filterECGData(DataSet, par=None):
     default_par = {
         'channel': 'ecg',
         'filterType': 'highpass',  # Example: filter type (lowpass, highpass)
-        'cutoff': 3,               # Hz: Cutoff frequency for the filter
+        'cutoff': .1,               # Hz: Cutoff frequency for the filter
         'order': 8,               # Filter order
         'fSample': DataSet.ecg.srate            # Sampling frequency (Hz)
     }
@@ -128,9 +128,9 @@ def filterECGData(DataSet, par=None):
     channel = par['channel']
     # Apply the filter to the signal
     if channel == 'ecg':
-        DS.ecg.y = pd.Series(signal.filtfilt(b, a, DS.ecg.level))
+        DS.ecg.level = pd.Series(signal.filtfilt(b, a, DS.ecg.level))
     if channel == 'bp':
-        DS.bp.y = pd.Series(signal.filtfilt(b, a, DS.bp.level))
+        DS.bp.level = pd.Series(signal.filtfilt(b, a, DS.bp.level))
         
     # Log the action
     DS.log_action('filterData', par)

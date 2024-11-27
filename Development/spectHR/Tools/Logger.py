@@ -1,5 +1,6 @@
 import ipywidgets as widgets
 import logging
+import sys  # Needed for flushing output
 
 class OutputWidgetHandler(logging.Handler):
     """
@@ -46,6 +47,7 @@ class OutputWidgetHandler(logging.Handler):
         # Redirect the formatted log message to the output widget
         with self.out:
             print(formatted_record)
+            sys.stdout.flush()  # Flush the output immediately
 
     def show_logs(self):
         """
@@ -61,8 +63,8 @@ class OutputWidgetHandler(logging.Handler):
 
 # Remove the default Jupyter StreamHandler to avoid duplicate log outputs
 # By default, Jupyter adds a handler that outputs logs to notebook cells.
-for handler in logging.root.handlers[:]:
-    logging.root.removeHandler(handler)
+#for handler in logging.root.handlers[:]:
+#    logging.root.removeHandler(handler)
 
 # Create a custom logger
 logger = logging.getLogger(__name__)  # Use the module's name as the logger name

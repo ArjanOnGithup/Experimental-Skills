@@ -7,15 +7,15 @@ import ipyvuetify as v
 
 import ipywidgets as widgets
 import math
-import pdb
 
-from spectHR.ui.LineHandler import LineHandler, AreaHandler
+from spectHR.ui.LineHandler import LineHandler
 from spectHR.Tools.Logger import logger
+from spectHR.Plots.Poincare import poincare
 
 import numpy as np
 import pandas as pd
 
-def prepPlot(data, x_min = None, x_max = None):
+def prepPlot(data, x_min = None, x_max = None, plot_poincare = False):
     """
     Plot the heart rate data with interactive features for zooming, 
     dragging lines, and selecting modes for adding, removing, or finding R-top times.
@@ -84,7 +84,7 @@ def prepPlot(data, x_min = None, x_max = None):
                     drag_mode = 'center'
         elif event.inaxes == ax_ecg:
             if edit_mode == 'Add':
-                line_handler.add_line(ax_ecg, event.xdata, 'red')
+                line_handler.add_line(event.xdata, 'red')
                 data.ecg.RTopTimes.add(event.xdata)
                 data.ecg.classID.append('N')
                 fig.canvas.draw_idle()
@@ -122,12 +122,6 @@ def prepPlot(data, x_min = None, x_max = None):
         update_plot(x_min, x_max)
         fig.canvas.draw_idle()
 
-    def update_mode(change, e, d):
-        """
-        Update the mode in LineHandler based on dropdown selection.
-        """   
-        line_handler.update_mode(change['new'])
-        edit_mode = change['new']
 
     # Helper to get figure dimensions in inches
     def calculate_figsize():
@@ -192,8 +186,9 @@ def prepPlot(data, x_min = None, x_max = None):
         Rt = [num for num, _ in vis_rtops]
         ibis = np.append(np.diff(Rt), 0)
         RTOPS = zip(*zip(*vis_rtops), ibis)
+        line_handler.clear()
         for rtop in tuple(RTOPS):
-            line_handler.add_line(ax, rtop[0], color = RTopColors[rtop[1]])
+            line_handler.add_line(rtop[0], color = RTopColors[rtop[1]])
             if rtop[2] != 0:
                 #Draw a double-sided arrow from the current R-top to the next
                 arrow = FancyArrowPatch((rtop[0], h), 
@@ -377,41 +372,53 @@ def prepPlot(data, x_min = None, x_max = None):
     fig.canvas.toolbar_visible = False
     fig.canvas.header_visible = False
     fig.tight_layout()
+
+    def add_rtop(new_x):
+        '''
+        Addan R-top time .
     
+        This function updates the 'RTopTimes' series 
+    
+        Args:
+            new_x (float): The new R-top time to add
+        '''
+        
+        data.ecg.RTopTimes.append(new_x)
+        # Sort the R-top times in ascending order and reset the index
+        sorted_indices = data.ecg.RTopTimes.argsort()
+        data.ecg.RTopTimes = data.ecg.RTopTimes[sorted_indices]
+        data.ecg.RTopTimes.reset_index(drop=True)
+        # Reorder the 'classID' list to match the new order of RTopTimes
+        classID = pd.Series(data.ecg.classID).append('N')
+        data.ecg.classID = classID[sorted_indices].tolist()
+        update_plot(x_min, x_max)
+
     # Callback to update R-top times upon dragging a line
-    def update_rtop_times(line, new_x):
+    def update_rtop_times(old_x, new_x):
         '''
         Update the position of an R-top time after dragging.
     
-        This function updates the 'RTopTimes' series by replacing the closest 
-        value to the original R-top time (line.origID) with a new value (new_x).
-        It then reorders the 'RTopTimes' series and the 'classID' list based on 
-        the updated R-top times, ensuring that the 'classID' entries correspond 
-        correctly to their new R-top times.
+        This function updates the 'RTopTimes' series 
     
         Args:
-            line (object): The line object that represents the draggable R-top, 
-                           containing the original R-top time (origID) and other 
-                           properties.
-            new_x (float): The new R-top time to update at the closest index to 
-                           the original R-top time (line.origID).
+            old_x (float): original value of the dragged r-top
+            new_x (float): The new R-top time to update to
         '''
         # Find the index of the R-top time closest to the original position
-        closest_idx = (data.ecg.RTopTimes - line.origID).abs().idxmin()
+        closest_idx = (data.ecg.RTopTimes - old_x).abs().idxmin()
         
-        # Retrieve the value of the closest R-top time for logging purposes
-        closest_value = data.ecg.RTopTimes.loc[closest_idx]
-                
+        logger.info(f'index = {closest_idx} set to {new_x}')
         # Update the R-top time at the closest index with the new value
-        data.ecg.RTopTimes.loc[closest_idx] = new_x
+        data.ecg.RTopTimes[closest_idx] = new_x
         
         # Sort the R-top times in ascending order and reset the index
         sorted_indices = data.ecg.RTopTimes.argsort()
         data.ecg.RTopTimes = data.ecg.RTopTimes[sorted_indices]
-        
+        data.ecg.RTopTimes.reset_index(drop=True)
         # Reorder the 'classID' list to match the new order of RTopTimes
         classID = pd.Series(data.ecg.classID)
         data.ecg.classID = classID[sorted_indices].tolist()
+        update_plot(x_min, x_max)
         
     line_handler = LineHandler(fig, ax_ecg, callback_drag=update_rtop_times)
     #area_handler = AreaHandler(fig, ax_ecg)    
@@ -424,23 +431,21 @@ def prepPlot(data, x_min = None, x_max = None):
     update_plot(x_min, x_max)
     # Connect the patch dragging events
 
-    bpe = fig.canvas.mpl_connect('button_press_event', on_press)
-    bod = fig.canvas.mpl_connect('motion_notify_event', on_drag)
-    bor = fig.canvas.mpl_connect('button_release_event', on_release)
+    #bpe = fig.canvas.mpl_connect('button_press_event', on_press)
+    #bod = fig.canvas.mpl_connect('motion_notify_event', on_drag)
+    #bor = fig.canvas.mpl_connect('button_release_event', on_release)
 
     # Mode selection dropdown widget for interaction
-    '''
-    mode_select = widgets.Dropdown(
-        options = ['Drag', 'Add', 'Find', 'Remove'],
-        value = 'Drag',
-        description = 'Mode:',
-        layout=widgets.Layout(width = '200px')
-    )
-    '''
-    mode_select = v.Select(color='primary', class_='ma-2', label = "Mode", items = ['Drag', 'Add', 'Find', 'Remove'])
+    def update_mode(change, e, d):
+        """
+        Update the mode in LineHandler based on dropdown selection.
+        """           
+        line_handler.update_mode(change.v_model)
+        edit_mode = change.v_model
+
+    mode_select = v.Select(color='primary', v_model = 'Drag', class_='ma-2', label = "Mode", items = ['Drag', 'Add', 'Find', 'Remove'])
     mode_select.on_event('change', update_mode)
     edit_mode = 'Drag'
-    # mode_select.observe(update_mode, names = 'value')
     
     figure_title = widgets.HTML(value='<center><H2>ECG signal</H2></center>', layout=widgets.Layout(width = '100%', justify_content = 'center'))
     spacer = widgets.Label(value='', layout=widgets.Layout(width = '200px'))
@@ -467,29 +472,6 @@ def prepPlot(data, x_min = None, x_max = None):
     end.on_event('click', on_end_clicked)
     
     '''
-    begin = widgets.Button(icon = 'chevron-left')
-    left = widgets.Button(icon = 'arrow-left')
-    prev = widgets.Button(icon = "step-backward")
-    wider = widgets.Button(icon = 'search-minus')    
-    zoom = widgets.Button(icon = 'search-plus')    
-    nex = widgets.Button(icon = "step-forward")
-    right = widgets.Button(icon = 'arrow-right')
-    end = widgets.Button(icon = 'chevron-right')
-    '''
-    '''
-    Add the callbacks to the buttons.
-    '''
-    '''
-    begin.on_click(on_begin_clicked)
-    left.on_click(on_left_clicked)
-    prev.on_click(on_prev_clicked)
-    wider.on_click(on_wider_clicked)
-    zoom.on_click(on_zoom_clicked)
-    nex.on_click(on_nex_clicked)
-    right.on_click(on_right_clicked)
-    end.on_click(on_end_clicked)
-    '''
-    '''
     Create the navigation HBox
     '''
     navigator = widgets.HBox([begin, left, prev, zoom, wider, nex, right, end],
@@ -499,10 +481,17 @@ def prepPlot(data, x_min = None, x_max = None):
     Embed the Matplotlib figure in the AppLayout
     Create the GUI
     '''
+    P = None
+    if (plot_poincare):
+        poincare_result = poincare(data)
+        poincare_plot = poincare_result['poincare_plot']
+        poincare_plot.set_size_inches(4, 4)
+        P =  poincare_plot.canvas
+        
     GUI = widgets.AppLayout(header = header, 
                             left_sidebar = None, 
                             center = widgets.Output(layout = widgets.Layout(margin ='0 0 0 0', padding = '0 0 0 0', border = '0px solid red')), 
-                            right_sidebar = None, 
+                            right_sidebar = P, 
                             footer  = navigator, 
                             pane_heights = [1,5,1])
     
