@@ -64,7 +64,7 @@ def calcPeaks(DataSet, par=None):
 
     # Step 7: Update the dataset's RTopTimes with the time stamps corresponding to the detected peaks
     DS.ecg.RTopTimes = DS.ecg.time.iloc[locs] + correction
-    DS.ecg.RTopTimes = DS.ecg.RTopTimes.reset_index(drop=True)
+    DS.ecg.RTopTimes = DS.ecg.RTopTimes.reset_index(drop=True).to_list()
 
     DS.ecg.ibi = np.diff(DS.ecg.RTopTimes)
     # Log the action

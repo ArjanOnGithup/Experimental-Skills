@@ -384,17 +384,11 @@ def prepPlot(data, x_min = None, x_max = None, plot_poincare = False):
         '''
         
         data.ecg.RTopTimes.append(new_x)
-        # Sort the R-top times in ascending order and reset the index
-        sorted_indices = data.ecg.RTopTimes.argsort()
-        data.ecg.RTopTimes = data.ecg.RTopTimes[sorted_indices]
-        data.ecg.RTopTimes.reset_index(drop=True)
-        # Reorder the 'classID' list to match the new order of RTopTimes
-        classID = pd.Series(data.ecg.classID).append('N')
-        data.ecg.classID = classID[sorted_indices].tolist()
-        update_plot(x_min, x_max)
+        data.ecg.classID.append('N')
+        sort_rtop()
 
     # Callback to update R-top times upon dragging a line
-    def update_rtop_times(old_x, new_x):
+    def update_rtop(old_x, new_x):
         '''
         Update the position of an R-top time after dragging.
     
@@ -410,7 +404,23 @@ def prepPlot(data, x_min = None, x_max = None, plot_poincare = False):
         logger.info(f'index = {closest_idx} set to {new_x}')
         # Update the R-top time at the closest index with the new value
         data.ecg.RTopTimes[closest_idx] = new_x
+        sort_rtop()
+
+    def add_rtop(new_x):
+        data.ecg.RTopTimes.append(new_x)
+        data.ecg.classID.append('N')
+        sort_rtop()
         
+    def remove_rtop(old_x, new_x):
+        closest_idx = (data.ecg.RTopTimes - old_x).abs().idxmin()
+        data.ecg.RTopTimes = data.ecg.RTopTimes.drop(data.ecg.RTopTimes.index[closest_idx])
+        classID = pd.Series(data.ecg.classID)
+        classID = classID.drop(classID.index[closest_idx])
+        data.ecg.classID = classID.tolist()
+        data.ecg.RTopTimes.reset_index(drop=True)
+        sort_rtop()
+        
+    def sort_rtop():
         # Sort the R-top times in ascending order and reset the index
         sorted_indices = data.ecg.RTopTimes.argsort()
         data.ecg.RTopTimes = data.ecg.RTopTimes[sorted_indices]
@@ -420,7 +430,7 @@ def prepPlot(data, x_min = None, x_max = None, plot_poincare = False):
         data.ecg.classID = classID[sorted_indices].tolist()
         update_plot(x_min, x_max)
         
-    line_handler = LineHandler(fig, ax_ecg, callback_drag=update_rtop_times)
+    line_handler = LineHandler(fig, ax_ecg, callback_drag=update_rtop, callback_add=add_rtop, callback_remove=remove_rtop)
     #area_handler = AreaHandler(fig, ax_ecg)    
     positional_patch  = plot_overview(ax_overview, data.ecg.time, data.ecg.level,  x_min, x_max)
 
