@@ -32,7 +32,7 @@ def prepPlot(data, x_min = None, x_max = None, plot_poincare = False):
     """
     # Local Functions:
     logger.info(f'Created a prepPlot')
-    RTopColors = {'N': 'green', 'L': 'cyan', 'S': 'magenta', 'T': 'orange', '1': 'turquoise', '2': 'lightseagreen'}    
+    RTopColors = {'N': 'green', 'L': 'cyan', 'S': 'magenta', 'TL': 'orange', 'SL': 'turquoise', 'SNS': 'lightseagreen'}    
     def update_plot(x_min, x_max):
         """
         Redraw the ECG plot, R-top times, and breathing rate (if available).
@@ -44,10 +44,13 @@ def prepPlot(data, x_min = None, x_max = None, plot_poincare = False):
         """
         plot_ecg_signal(ax_ecg, data.ecg.time, data.ecg.level)
         # Plot R-top times if available in the data
-        if hasattr(data.ecg, 'RTopTimes'):
+        if hasattr(data, 'RTops'):
             # Plot only R-tops within x_min and x_max
-            visible_rtops = [(t, c) for t, c in sorted(zip(data.ecg.RTopTimes, data.ecg.classID))
-                         if (x_min-1) <= t <= (x_max+1)]
+            visibles = data.RTops[(data.RTops['time'] >= x_min - 1) & (data.RTops['time'] <= x_max + 1)]
+        
+            # Create a list of tuples (time, ID) from the filtered DataFrame
+            visible_rtops = list(zip(visibles['time'], visibles['ID']))
+            
             if visible_rtops:
                 if len(visible_rtops) < 100:
                     plot_rtop_times(ax_ecg, visible_rtops, line_handler)  # Plot VLines in the current view
@@ -82,13 +85,14 @@ def prepPlot(data, x_min = None, x_max = None, plot_poincare = False):
                     drag_mode = 'right'
                 else:
                     drag_mode = 'center'
-        elif event.inaxes == ax_ecg:
-            if edit_mode == 'Add':
-                line_handler.add_line(event.xdata, 'red')
-                data.ecg.RTopTimes.add(event.xdata)
-                data.ecg.classID.append('N')
-                fig.canvas.draw_idle()
-                drag_mode = None
+                    
+        elif edit_mode == 'Add':
+           if event.inaxes == ax_ecg:
+                if edit_mode == 'Add':
+                    datapoint = {'time': event.xdata,'ID': 'N','ibi': float('nan')}
+                    data.RTops.loc[len(data.RTops)] = datapoint
+                    sort_rtop()
+                    update_plot(x_min, x_max)
 
     def on_drag(event):
         """
@@ -96,22 +100,20 @@ def prepPlot(data, x_min = None, x_max = None, plot_poincare = False):
         Adjusts the x_min and x_max limits depending on where the mouse is dragged.
         """
         nonlocal x_min, x_max, drag_mode, initial_xmin, initial_xmax
-        if drag_mode is not None: 
-            if event.inaxes == ax_overview:  # If click is on the overview plot
-                # Adjust the zoom limits based on drag mode (left, right, or center)
-                if drag_mode == 'left':
-                    x_min = min(event.xdata, x_max - 0.1)
-                elif drag_mode == 'right':
-                    x_max = max(event.xdata, x_min + 0.1)
-                elif drag_mode == 'center':
-                    dx = event.xdata - 0.5 * (initial_xmin + initial_xmax)
-                    x_min = initial_xmin + dx
-                    x_max = initial_xmax + dx
-
-                # Update the zoom box position
-                positional_patch.set_x(x_min)
-                positional_patch.set_width(x_max - x_min)
-                fig.canvas.draw_idle()
+        if event.inaxes == ax_overview:  # If click is on the overview plot
+            # Adjust the zoom limits based on drag mode (left, right, or center)
+            if drag_mode == 'left':
+                x_min = min(event.xdata, x_max - 0.1)
+            elif drag_mode == 'right':
+                x_max = max(event.xdata, x_min + 0.1)
+            elif drag_mode == 'center':
+                dx = event.xdata - 0.5 * (initial_xmin + initial_xmax)
+                x_min = initial_xmin + dx
+                x_max = initial_xmax + dx
+            # Update the zoom box position
+            positional_patch.set_x(x_min)
+            positional_patch.set_width(x_max - x_min)
+            fig.canvas.draw_idle()
 
     def on_release(event):
         """
@@ -126,7 +128,7 @@ def prepPlot(data, x_min = None, x_max = None, plot_poincare = False):
     # Helper to get figure dimensions in inches
     def calculate_figsize():
         dpi = matplotlib.rcParams['figure.dpi']  # Get the current DPI setting
-        return (1024/dpi, 370/dpi)
+        return (1280/dpi, 370/dpi)
     
     def create_figure_axes(data):
         """
@@ -181,8 +183,6 @@ def prepPlot(data, x_min = None, x_max = None, plot_poincare = False):
         Plots vertical lines and arrows for each R-top time with labels indicating the IBI value.
         """
         h = ax.get_ylim()[1] + (0.05 * (ax.get_ylim()[1] - ax.get_ylim()[0]))
-        #line_handler.draggable_lines = []
-        #line_handler = LineHandler(fig, ax_ecg, callback_drag=update_rtop_times)
         Rt = [num for num, _ in vis_rtops]
         ibis = np.append(np.diff(Rt), 0)
         RTOPS = zip(*zip(*vis_rtops), ibis)
@@ -292,8 +292,8 @@ def prepPlot(data, x_min = None, x_max = None, plot_poincare = False):
         """
         nonlocal x_min, x_max
         x_range = x_max - x_min
-        idx = data.ecg.RTopTimes[
-            (pd.Series(data.ecg.classID) == 'S') & (data.ecg.RTopTimes < x_min)
+        idx = data.RTops['time'][
+            (pd.Series(data.RTops['ID']) != 'N') & (data.RTops['time'] < x_min)
         ]
         next_idx = idx.iloc[-1] if not idx.empty else None
         if next_idx is not None:
@@ -329,8 +329,7 @@ def prepPlot(data, x_min = None, x_max = None, plot_poincare = False):
         """
         nonlocal x_min, x_max
         x_range = x_max - x_min
-        idx = data.ecg.RTopTimes[
-            (pd.Series(data.ecg.classID) != 'N') & (data.ecg.RTopTimes > x_max)
+        idx = data.RTops['time']['ID'] != 'N') & (data.RTops['time'] > x_max))
         ]
         next_idx = idx.iloc[0] if not idx.empty else None
         if next_idx is not None:
@@ -372,65 +371,40 @@ def prepPlot(data, x_min = None, x_max = None, plot_poincare = False):
     fig.canvas.toolbar_visible = False
     fig.canvas.header_visible = False
     fig.tight_layout()
-
-    def add_rtop(new_x):
-        '''
-        Addan R-top time .
-    
-        This function updates the 'RTopTimes' series 
-    
-        Args:
-            new_x (float): The new R-top time to add
-        '''
         
-        data.ecg.RTopTimes.append(new_x)
-        data.ecg.classID.append('N')
-        sort_rtop()
-
     # Callback to update R-top times upon dragging a line
     def update_rtop(old_x, new_x):
         '''
         Update the position of an R-top time after dragging.
     
-        This function updates the 'RTopTimes' series 
+        This function updates the 'RTops' series 
     
         Args:
             old_x (float): original value of the dragged r-top
             new_x (float): The new R-top time to update to
         '''
         # Find the index of the R-top time closest to the original position
-        closest_idx = (data.ecg.RTopTimes - old_x).abs().idxmin()
+        closest_idx = (data.RTops['time'] - old_x).abs().idxmin()
         
         logger.info(f'index = {closest_idx} set to {new_x}')
         # Update the R-top time at the closest index with the new value
-        data.ecg.RTopTimes[closest_idx] = new_x
+        data.RTops.at[closest_idx, 'time'] = new_x
         sort_rtop()
 
-    def add_rtop(new_x):
-        data.ecg.RTopTimes.append(new_x)
-        data.ecg.classID.append('N')
-        sort_rtop()
-        
     def remove_rtop(old_x, new_x):
-        closest_idx = (data.ecg.RTopTimes - old_x).abs().idxmin()
-        data.ecg.RTopTimes = data.ecg.RTopTimes.drop(data.ecg.RTopTimes.index[closest_idx])
-        classID = pd.Series(data.ecg.classID)
-        classID = classID.drop(classID.index[closest_idx])
-        data.ecg.classID = classID.tolist()
-        data.ecg.RTopTimes.reset_index(drop=True)
+        logger.info("remove")
+        closest_idx = (data.RTops['time'] - old_x).abs().idxmin()
+        data.RTops = data.RTops.drop(closest_idx)
         sort_rtop()
         
     def sort_rtop():
         # Sort the R-top times in ascending order and reset the index
-        sorted_indices = data.ecg.RTopTimes.argsort()
-        data.ecg.RTopTimes = data.ecg.RTopTimes[sorted_indices]
-        data.ecg.RTopTimes.reset_index(drop=True)
-        # Reorder the 'classID' list to match the new order of RTopTimes
-        classID = pd.Series(data.ecg.classID)
-        data.ecg.classID = classID[sorted_indices].tolist()
+        data.RTops = data.RTops.sort_values(by='time')
+        IBI = np.append(np.diff(data.RTops['time']), float('nan'))
+        data.RTops['ibi'] = IBI
         update_plot(x_min, x_max)
         
-    line_handler = LineHandler(fig, ax_ecg, callback_drag=update_rtop, callback_add=add_rtop, callback_remove=remove_rtop)
+    line_handler = LineHandler(ax_ecg, callback_drag=update_rtop, callback_remove=remove_rtop)
     #area_handler = AreaHandler(fig, ax_ecg)    
     positional_patch  = plot_overview(ax_overview, data.ecg.time, data.ecg.level,  x_min, x_max)
 
@@ -441,25 +415,35 @@ def prepPlot(data, x_min = None, x_max = None, plot_poincare = False):
     update_plot(x_min, x_max)
     # Connect the patch dragging events
 
-    #bpe = fig.canvas.mpl_connect('button_press_event', on_press)
+    bpe = fig.canvas.mpl_connect('button_press_event', on_press)
     #bod = fig.canvas.mpl_connect('motion_notify_event', on_drag)
     #bor = fig.canvas.mpl_connect('button_release_event', on_release)
-
+    
+    edit_mode = 'Drag'
+    
     # Mode selection dropdown widget for interaction
     def update_mode(change, e, d):
         """
         Update the mode in LineHandler based on dropdown selection.
-        """           
+        """        
+        nonlocal edit_mode
         line_handler.update_mode(change.v_model)
         edit_mode = change.v_model
 
-    mode_select = v.Select(color='primary', v_model = 'Drag', class_='ma-2', label = "Mode", items = ['Drag', 'Add', 'Find', 'Remove'])
-    mode_select.on_event('change', update_mode)
-    edit_mode = 'Drag'
+    mode_select = v.Select(color='primary', v_model = 'Drag', \
+                           class_='ma-2', label = "Mode", \
+                           items = ['Drag', 'Add', 'Find', 'Remove'])
     
-    figure_title = widgets.HTML(value='<center><H2>ECG signal</H2></center>', layout=widgets.Layout(width = '100%', justify_content = 'center'))
+    mode_select.on_event('change', update_mode)
+
+    
+    figure_title = widgets.HTML(value='<center><H2>ECG signal</H2></center>', \
+                                layout=widgets.Layout(width = '100%', justify_content = 'center'))
+    
     spacer = widgets.Label(value='', layout=widgets.Layout(width = '200px'))
-    header = widgets.HBox([mode_select, figure_title, spacer ], layout=widgets.Layout(justify_content = 'center', width = '100%'))
+    
+    header = widgets.HBox([mode_select, figure_title, spacer ], \
+                          layout=widgets.Layout(justify_content = 'center', width = '100%'))
     '''
     Create navigation Buttons. These are used to navigate through the dataset
     '''
@@ -485,7 +469,8 @@ def prepPlot(data, x_min = None, x_max = None, plot_poincare = False):
     Create the navigation HBox
     '''
     navigator = widgets.HBox([begin, left, prev, zoom, wider, nex, right, end],
-                    layout=widgets.Layout(justify_content = 'center', width = '100%', border = '0px solid green'))
+                    layout=widgets.Layout(justify_content = 'center', \
+                                          width = '100%', border = '0px solid green'))
 
     '''
     Embed the Matplotlib figure in the AppLayout
@@ -500,7 +485,10 @@ def prepPlot(data, x_min = None, x_max = None, plot_poincare = False):
         
     GUI = widgets.AppLayout(header = header, 
                             left_sidebar = None, 
-                            center = widgets.Output(layout = widgets.Layout(margin ='0 0 0 0', padding = '0 0 0 0', border = '0px solid red')), 
+                            center = widgets.Output(layout = widgets.Layout(margin ='0 0 0 0', \
+                                                                            padding = '0 0 0 0', \
+                                                                            border = '0px solid red')\
+                                                   ), 
                             right_sidebar = P, 
                             footer  = navigator, 
                             pane_heights = [1,5,1])

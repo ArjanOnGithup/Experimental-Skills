@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import copy
 import scipy.signal as signal
-from spectHR.Tools.Logger import logger, handler
+from spectHR.Tools.Logger import logger
 
 def calcPeaks(DataSet, par=None):
     """
@@ -63,11 +63,10 @@ def calcPeaks(DataSet, par=None):
     logger.info(f"Found {len(locs)} r-tops")
 
     # Step 7: Update the dataset's RTopTimes with the time stamps corresponding to the detected peaks
-    DS.ecg.RTopTimes = DS.ecg.time.iloc[locs] + correction
-    DS.ecg.RTopTimes = DS.ecg.RTopTimes.reset_index(drop=True).to_list()
-
-    DS.ecg.ibi = np.diff(DS.ecg.RTopTimes)
+    DS.RTops = pd.DataFrame({'time': (DS.ecg.time.iloc[locs] + correction).tolist()})
+    DS.RTops['ID'] = 'N'
     # Log the action
+    
     DS.log_action('calcPeaks', par)
     # Step 8: If warrented: classify and label the peaks 
     if par['Classify']:
@@ -179,7 +178,7 @@ def borderData(DataSet, par=None):
     return DS
     
 
-def classify(DataSet, par=None):
+def classify(data, par=None):
     """Performs the classification of IBIs based on the input R-top times.
     Classifies Inter-Beat Intervals (IBIs) based on statistical thresholds.
 
@@ -188,17 +187,18 @@ def classify(DataSet, par=None):
         par (dict, optional): Parameters for classification.
 
     Returns:
-        classID (list): Classification of IBIs ('N', 'L', 'S', 'T', '1', '2').
+        classID (list): Classification of IBIs ('N', 'L', 'S', 'TL', 'SL', 'SNS').
     """
     default_par = {"Tw": 51, "Nsd": 4, "Tmax": 5}
-
+    
     if par is None:
         par = default_par
     else:
         par = {**default_par, **par}
 
-    IBI = DataSet.ecg.ibi 
-    classID = ['N'] * (len(IBI) + 1)  # Default to 'N'
+    # Calculate the IBIs
+    IBI = np.append(np.diff(data.RTops['time']), float('nan'))
+    data.RTops['ibi'] = IBI
 
     # Calculate moving average and standard deviation
     avIBIr = pd.Series(IBI).rolling(window=par["Tw"]).mean().to_numpy()
@@ -210,27 +210,24 @@ def classify(DataSet, par=None):
     # Classifications based on thresholds
     for i in range(len(IBI)):
         if IBI[i] > higher[i]:
-            classID[i] = "L"  # Long IBI
+            data.RTops.loc[i, 'ID'] = "L"  # Long IBI
         elif IBI[i] < lower[i]:
-            classID[i] = "S"  # Short IBI
+            data.RTops.loc[i, 'ID'] = "S"  # Short IBI
         elif IBI[i] > par["Tmax"]:
-            classID[i] = "T"  # Too Long
+            data.RTops.loc[i, 'ID'] = "TL"  # Too Long
 
     # Short followed by long
-    for i in range(len(classID) - 1):
-        if classID[i] == "S" and classID[i + 1] == "L":
-            classID[i] = "1"  # Short-long sequence
-        if i < len(classID) - 2:
-            if classID[i] == "S" and classID[i + 1] == "N" and classID[i + 2] == "S":
-                classID[i] = "2"  # Short-normal-short sequence
+    for i in range(len(data.RTops['ID']) - 1):
+        if data.RTops.loc[i, 'ID'] == "S" and data.RTops.loc[i + 1, 'ID'] == "L":
+            data.RTops.loc[i, 'ID'] = "SL"  # Short-long sequence
+        if i < len(data.RTops['ID']) - 2:
+            if data.RTops.loc[i, 'ID'] == "S" and data.RTops.loc[i + 1, 'ID'] == "N" and data.RTops.loc[i + 2, 'ID'] == "S":
+                data.RTops.loc[i, 'ID'] = "SNS"  # Short-normal-short sequence
 
-    # Assign the classID back to DataSet
-    DataSet.ecg.classID = classID
+    # Count occurrences of each ID
+    id_counts = data.RTops['ID'].value_counts()
+    for ids, count in id_counts.items():
+        logger.info(f"Found {count} {ids} rtops")
+    
+    return data
 
-    # Display classification counts
-    unique_ids = set(classID)
-    for id in unique_ids:
-        count = classID.count(id)
-        logger.info(f"Found {count} {id} rtops")
-
-    return DataSet.ecg.classID

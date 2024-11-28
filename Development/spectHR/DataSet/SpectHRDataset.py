@@ -91,7 +91,9 @@ class SpectHRDataset:
         """
         self.ecg = None
         self.br = None
+        self.RTopTimes = None
         self.events = None
+
         self.history = []
         self.par = par if par is not None else {}
         self.starttime = None

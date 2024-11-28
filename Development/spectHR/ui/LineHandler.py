@@ -12,7 +12,7 @@ class DraggableVLine:
     """
     active_line = None  # Shared among all instances
     mode = 'Drag'
-    def __init__(self, figster, ax, x_position, callback_drag=None, callback_remove=None, color = 'red'):
+    def __init__(self, ax, x_position, callback_drag=None, callback_remove=None, color = 'red'):
         """
         Initializes DraggableVLine at a specified x position.
         
@@ -22,7 +22,6 @@ class DraggableVLine:
             callback_drag (callable, optional): Callback for when the line is dragged.
         """
         self.ax = ax
-        self.fig = figster
         self.line = self.ax.axvline(x=x_position, color=color, lw=1, linestyle='-.', picker=True, pickradius = 10,  alpha = .7)
         self.callback_drag = callback_drag
         self.callback_remove = callback_remove
@@ -36,8 +35,8 @@ class DraggableVLine:
         Args:
             event (matplotlib.backend_bases.Event): The mouse press event.
         """
-        if DraggableVLine.mode == 'Drag' or DraggableVLine.mode == 'Remove':
-            if DraggableVLine.active_line is None and self.line.contains(event)[0]:
+        if (DraggableVLine.mode == 'Drag') or (DraggableVLine.mode == 'Remove'):
+            if (DraggableVLine.active_line is None) and (self.line.contains(event)[0]):
                 DraggableVLine.active_line = self.line
                 self.press = self.line.get_xdata()[0]        
 
@@ -60,16 +59,16 @@ class DraggableVLine:
         Args:
             event (matplotlib.backend_bases.Event): The mouse release event.
         """
-        if (DraggableVLine.mode == 'Drag' or DraggableVLine.mode == 'Remove') \
-                and (DraggableVLine.active_line is not self.line \
+        if (DraggableVLine.mode != 'Drag' and DraggableVLine.mode != 'Remove') \
                      or self.press is None \
-                     or event.inaxes is not self.ax):
+                     or event.inaxes is not self.ax:
             return
 
         # Callback with updated x-position if set
-        if DraggableVLine.mode == 'Drag' \
+        if DraggableVLine.mode == 'Drag' and DraggableVLine.active_line is self.line \
                 and self.callback_drag:
             self.callback_drag(self.press, event.xdata)
+
             
         if DraggableVLine.mode == 'Remove' \
                 and self.callback_remove:
@@ -78,7 +77,7 @@ class DraggableVLine:
         
         self.press = None
         DraggableVLine.active_line = None
-        #event.canvas.release_mouse(self.ax)  # Release mouse events from this figure
+
             
     def connect(self, fig):
         """
@@ -101,7 +100,7 @@ class LineHandler:
         callback_remove (callable): Function to call when a line is removed.
     """
     
-    def __init__(self, figster, ax, callback_add=None, callback_remove=None, callback_drag=None):
+    def __init__(self, ax, callback_remove=None, callback_drag=None):
         """
         Initializes LineHandler with an empty set of draggable lines and optional callbacks.
         
@@ -110,10 +109,8 @@ class LineHandler:
             callback_remove (callable, optional): Callback for when a line is removed.
             callback_drag (callable, optional): Callback for when a line is dragged.
         """
-        self.fig = figster
         self.ax = ax
         self.draggable_lines = []
-        self.callback_add = callback_add
         self.callback_remove = callback_remove
         self.callback_drag = callback_drag
         DraggableVLine.mode = 'Drag'
@@ -126,7 +123,7 @@ class LineHandler:
             ax (matplotlib.axes.Axes): The axes on which to add the line.
             x_position (float): The x-coordinate for the new line.
         """
-        self.draggable_lines.append(DraggableVLine(self.fig, self.ax, x_position, self.callback_drag, self.callback_remove, color=color))
+        self.draggable_lines.append(DraggableVLine(self.ax, x_position, self.callback_drag, self.callback_remove, color=color))
 
         
     def remove_line(self, line):
