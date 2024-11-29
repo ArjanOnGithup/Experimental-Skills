@@ -1,0 +1,6 @@
+- implement 'find'. Select part of the data while dragging, and the do the peakfinding and the interpolation there
+- interact with the poicare plot: go to the r-top clicked on.
+
+- implement creation of epochs.
+- save the preprocessed data
+- calculate parameters over epochs and on the preprocessed data

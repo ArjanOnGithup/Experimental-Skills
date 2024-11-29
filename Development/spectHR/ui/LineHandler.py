@@ -72,8 +72,7 @@ class DraggableVLine:
             
         if DraggableVLine.mode == 'Remove' \
                 and self.callback_remove:
-            logger.info("removing")
-            self.callback_remove(self.press, event.xdata)
+            self.callback_remove(self.press)
             self.line.remove()
         
         self.press = None

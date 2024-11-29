@@ -19,11 +19,13 @@
 - Python 3.7+
 - Jupyter notebook or JupyterLab
 - ipywidgets
+- pyhrv
 - ipyvuetify (for nicer looking widgets)
-- Voilà (for interactive visualization)
+
 
 ### Install the library
-
+<not yet. but you can clone this repo...>
+ 
 You can install `spectHR` using pip:
 
 ```bash
