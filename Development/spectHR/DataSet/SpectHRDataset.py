@@ -1,8 +1,12 @@
 import pandas as pd
 import numpy as np
 import pyxdf
+import os
+from pathlib import Path
+
 from datetime import datetime
-from spectHR.Tools.Logger import logger, handler
+from spectHR.Tools.Logger import logger
+from spectHR.Tools.Webdav import copyWebdav
 
 class TimeSeries:
     """
@@ -77,7 +81,6 @@ class SpectHRDataset:
         log_action(action_name, params):
             Logs an action with its parameters into the dataset history.
     """
-    
     def __init__(self, filename, ecg_index=None, br_index=None, event_index=None, par=None):
         """
         Initializes the SpectHRDataset by loading data from a file.
@@ -89,6 +92,8 @@ class SpectHRDataset:
             event_index (int, optional): Index of the event stream in the XDF file. Defaults to None.
             par (dict, optional): Initial parameters for the dataset. Defaults to None.
         """
+        
+        
         self.ecg = None
         self.br = None
         self.RTopTimes = None
@@ -97,9 +102,13 @@ class SpectHRDataset:
         self.history = []
         self.par = par if par is not None else {}
         self.starttime = None
-        logger.info(f'Loading "{filename}"')
 
+        self.datadir = os.path.dirname(filename)
+        self.filename = os.path.basename(filename)
+        filename = os.path.join(self.datadir, self.filename)
+        copyWebdav(filename)
         self.loadData(filename, ecg_index, br_index, event_index)
+
 
     def loadData(self, filename, ecg_index=None, br_index=None, event_index=None):
         """
@@ -128,7 +137,9 @@ class SpectHRDataset:
             
             ecg_levels = pd.Series(rawdata[ecg_index]["time_series"].flatten())
             ecg_timestamps -= self.starttime
-            
+            # pragmatic apprauch. Might do better. This flips the signal if it thinks it needs to...
+            if 1.2 * abs(np.mean(ecg_levels) - np.min(ecg_levels)) > abs(np.mean(ecg_levels) - np.max(ecg_levels)): 
+                ecg_levels = -ecg_levels
             self.ecg = TimeSeries(ecg_timestamps, ecg_levels)
 
         # Load breathing data
@@ -147,7 +158,7 @@ class SpectHRDataset:
                 'timestamp': event_timestamps - self.starttime,
                 'label': event_labels
             })
-
+            
     def log_action(self, action_name, params):
         """
         Logs an action performed on the dataset.
