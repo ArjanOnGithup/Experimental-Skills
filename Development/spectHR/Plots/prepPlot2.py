@@ -203,7 +203,6 @@ def prepPlot2(data, x_min=None, x_max=None, plot_poincare=False):
         h = ax.get_ylim()[1] + (0.05 * (ax.get_ylim()[1] - ax.get_ylim()[0]))
         line_handler.clear()
         for rtop in visibles.itertuples():
-            logger.info(rtop)
             line_handler.add_line(rtop.time, color=RTopColors[rtop.ID])
             if rtop.ibi != 0:
                 # Draw a double-sided arrow from the current R-top to the next
