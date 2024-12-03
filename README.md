@@ -75,6 +75,79 @@ The algorithm calculates a moving average and standard deviation of IBIs over a 
 The function also provides a summary of detected classifications, logging the frequency of each label. This systematic approach helps identify deviations from regular heartbeat intervals and potential artifacts, supporting detailed analysis of ECG data.
 
 
+Parameters used in the classification:
+
+1. Tw (Window Size):
+
+Description: Specifies the size of the rolling window (in beats) used to calculate the moving average (avIBIr) and standard deviation (SDavIBIr) of the Inter-Beat Intervals (IBIs).
+
+Usage:
+
+Affects the dynamic thresholds (lower and higher) by smoothing the IBIs over a range defined by this window.
+
+Larger values of Tw create smoother thresholds but may overlook short-term variability, while smaller values result in more sensitive thresholds that reflect short-term changes.
+
+
+Default: Tw = 51.
+
+
+
+2. Nsd (Number of Standard Deviations):
+
+Description: Determines the multiplier for the standard deviation when calculating the dynamic thresholds (lower and higher) for classifying IBIs as "Short" (S) or "Long" (L).
+
+Usage:
+
+Affects the boundaries of normal IBIs:
+
+\text{lower} = \text{avIBIr} - (\text{Nsd} \times \text{SDavIBIr})
+
+\text{higher} = \text{avIBIr} + (\text{Nsd} \times \text{SDavIBIr})
+
+- Higher values of Nsd result in wider thresholds, reducing sensitivity to variations, while lower values make the classification more sensitive to smaller deviations.
+
+Default: Nsd = 4.
+
+
+3. Tmax (Maximum Interval Threshold):
+
+Description: Sets an absolute upper limit (in seconds) for classifying IBIs as "Too Long" (TL).
+
+Usage:
+
+Any IBI exceeding this value is immediately labeled as "Too Long," irrespective of the dynamic thresholds (higher and lower).
+
+Provides a fixed boundary to capture extreme outliers that may indicate significant irregularities or artifacts in the data.
+
+
+Default: Tmax = 5.
+
+
+How These Parameters Influence the Function
+
+1. Calculation of Dynamic Thresholds:
+
+The rolling window size (Tw) and standard deviation multiplier (Nsd) work together to create individual-specific thresholds. These thresholds adapt to the temporal variability of the IBIs, classifying deviations as either "Short" (S) or "Long" (L).
+
+
+2. Absolute Threshold (Tmax):
+
+Serves as an override for dynamic thresholds by assigning the "Too Long" (TL) label to any IBI that exceeds this fixed value. This ensures extreme outliers are captured even if they fall within the dynamic thresholds.
+
+
+3. Impact on Classification:
+
+Dynamic Adjustments: The combination of Tw and Nsd tailors the classification to the individual's data, ensuring the function is sensitive to relative changes while minimizing false positives.
+
+Outlier Detection: Tmax ensures robustness by capturing exceptionally long intervals, regardless of variability in the moving averages.
+
+
+Summary of Parameter Roles
+
+This parameter structure allows flexibility in adapting the function to different datasets and use cases, balancing sensitivity and robustness in IBI classification.
+
+
+
 Once the data is loaded, you can visualize it with interactive plots:
 
 ```python
