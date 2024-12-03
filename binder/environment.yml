@@ -9,7 +9,6 @@ dependencies:
   - conda
   - conda-pack
   - datashader
-  - easywebdav
   - feather-format
   - gdown
   - html5lib
@@ -49,4 +48,4 @@ dependencies:
   - xlwt
   - pip:
     - pyhrv
-  
+    - easywebdav
