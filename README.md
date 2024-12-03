@@ -100,9 +100,9 @@ Usage:
 
 Affects the boundaries of normal IBIs:
 
-\text{lower} = \text{avIBIr} - (\text{Nsd} \times \text{SDavIBIr})
+$$\text{lower} = \text{avIBIr} - (\text{Nsd} \times \text{SDavIBIr})
 
-\text{higher} = \text{avIBIr} + (\text{Nsd} \times \text{SDavIBIr})
+$$\text{higher} = \text{avIBIr} + (\text{Nsd} \times \text{SDavIBIr})
 
 - Higher values of Nsd result in wider thresholds, reducing sensitivity to variations, while lower values make the classification more sensitive to smaller deviations.
 
