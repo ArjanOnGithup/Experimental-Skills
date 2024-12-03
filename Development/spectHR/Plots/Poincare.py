@@ -2,7 +2,7 @@ import pyhrv
 import matplotlib.pyplot as plt
 
 def poincare(data, xy_min=None, xy_max=None):
-    ret = pyhrv.nonlinear.poincare(rpeaks = data.RTops['time'], legend=False)
+    ret = pyhrv.nonlinear.poincare(rpeaks = data.RTop['time'], show=True, legend=False, ellipse=True)
     ret = ret.as_dict()
     fig = ret['poincare_plot']
     ax = fig.get_axes()
