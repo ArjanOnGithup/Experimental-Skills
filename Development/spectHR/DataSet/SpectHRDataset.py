@@ -81,7 +81,7 @@ class SpectHRDataset:
         log_action(action_name, params):
             Logs an action with its parameters into the dataset history.
     """
-    def __init__(self, filename, ecg_index=None, br_index=None, event_index=None, par=None):
+    def __init__(self, filename, ecg_index=None, br_index=None, event_index=None, par=None, use_webdav = False):
         """
         Initializes the SpectHRDataset by loading data from a file.
 
@@ -96,7 +96,7 @@ class SpectHRDataset:
         
         self.ecg = None
         self.br = None
-        self.RTopTimes = None
+        self.bp = None
         self.events = None
 
         self.history = []
@@ -106,11 +106,20 @@ class SpectHRDataset:
         self.datadir = os.path.dirname(filename)
         self.filename = os.path.basename(filename)
         filename = os.path.join(self.datadir, self.filename)
-        copyWebdav(filename)
-        self.loadData(filename, ecg_index, br_index, event_index)
+        found = Path(filename).exists()            
+        
+        if use_webdav:
+            found = copyWebdav(filename)
+            
+        if found:
+            self.loadData(filename, ecg_index, br_index, event_index)
+        else:
+            logger.error(f"file {filename} was not found")
 
-
-    def loadData(self, filename, ecg_index=None, br_index=None, event_index=None):
+    def saveData(self, filename):
+        pass
+        
+    def loadData(self, filename, ecg_index=None, br_index=None, bp_index=None, event_index=None):
         """
         Loads data from an XDF file into the dataset.
 
@@ -150,15 +159,62 @@ class SpectHRDataset:
             
             self.br = TimeSeries(br_timestamps, br_levels)
 
+        # Load bloodpressure data
+        if bp_index is not None:
+            bp_timestamps = pd.Series(rawdata[bp_index]["time_stamps"])
+            bp_levels = pd.Series(rawdata[bp_index]["time_series"].flatten())
+            bp_timestamps -= self.starttime
+            
+            self.bp = TimeSeries(bp_timestamps, bp_levels)
+
         # Load event data
         if event_index is not None:
             event_timestamps = pd.Series(rawdata[event_index]["time_stamps"])
-            event_labels = rawdata[event_index]["time_series"]
+            event_labels = pd.Series(rawdata[event_index]["time_series"])
+            event_labels = event_labels.apply(lambda x: x[0])
             self.events = pd.DataFrame({
-                'timestamp': event_timestamps - self.starttime,
+                'time': event_timestamps - self.starttime,
                 'label': event_labels
             })
-            
+            self.create_epoch_series()
+
+    def create_epoch_series(self):
+        """
+        Creates an 'epoch' series within the dataset to map each time point in the ECG
+        to a corresponding epoch based on event labels ('start' and 'end').
+
+        Returns:
+            pd.Series: A series with epoch labels for each time index in the ECG and RTopTimes.
+        """
+        if self.events is None:
+            logger.error('No events availeable for epoch generation')
+
+        self.ecg_epoch = pd.Series(index=self.ecg.time.index, dtype="object")
+
+        labels = self.events['label'].str.lower()
+        start_indices = self.events[labels.str.startswith('start')].index
+        end_indices = self.events[labels.str.startswith('end')].index
+
+        # Create epoch identifiers
+        epoch_id = None
+        for start_idx in start_indices:
+            epoch_name = self.events['label'][start_idx][5:].strip()  # Get the epoch name
+            start_time = self.events['time'][start_idx]
+
+            # Find the corresponding 'end' time
+            if len(end_indices) > 0 and end_indices[0] > start_idx:
+                end_time = self.events['time'][end_indices[0]]
+            else:
+                # Handle missing 'end', use next 'start' or end of data
+                end_time = (
+                    self.events['time'][start_indices[start_indices.get_loc(start_idx) + 1]]
+                    if start_idx + 1 < len(start_indices)
+                    else self.ecg.time.iloc[-1]
+                )
+
+            # Assign epoch label to the time series (ecg and RTopTimes)
+            self.ecg_epoch.loc[(self.ecg.time >= start_time) & (self.ecg.time <= end_time)] = epoch_name
+        
     def log_action(self, action_name, params):
         """
         Logs an action performed on the dataset.

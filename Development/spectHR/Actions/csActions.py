@@ -4,6 +4,7 @@ import copy
 import scipy.signal as signal
 from spectHR.Tools.Logger import logger
 
+    
 def calcPeaks(DataSet, par=None):
     """
     Detects R-tops (peaks) in an ECG signal and calculates the Inter-Beat Interval (IBI).
@@ -25,10 +26,7 @@ def calcPeaks(DataSet, par=None):
     }
 
     # Merge passed par with default if any
-    if par is None:
-        par = default_par
-    else:
-        par = {**default_par, **par}
+    par = {**default_par, **(par or {})}
     
     DS = copy.deepcopy(DataSet)
 
@@ -63,14 +61,17 @@ def calcPeaks(DataSet, par=None):
     logger.info(f"Found {len(locs)} r-tops")
 
     # Step 7: Update the dataset's RTopTimes with the time stamps corresponding to the detected peaks
-    DS.RTops = pd.DataFrame({'time': (DS.ecg.time.iloc[locs] + correction).tolist()})
-    DS.RTops['ID'] = 'N'
-    # Log the action
-    
-    DS.log_action('calcPeaks', par)
+    DS.RTops = pd.DataFrame({'time': (DS.ecg.time.iloc[locs] + correction).tolist(), 'epoch': DS.ecg_epoch.iloc[locs]})
     # Step 8: If warrented: classify and label the peaks 
+    # Calculate the IBIs
+    IBI = np.append(np.diff(DS.RTops['time']), float('nan'))
+    DS.RTops['ibi'] = IBI
+
+    DS.RTops['ID'] = 'N'
     if par['Classify']:
         classify(DS)
+    # Log the action
+    DS.log_action('calcPeaks', par)
     # Step 9: Return the updated dataset and the parameters
     return DS
 
@@ -103,10 +104,7 @@ def filterECGData(DataSet, par=None):
     }
 
     # Merge passed par with default if any
-    if par is None:
-        par = default_par
-    else:
-        par = {**default_par, **par}
+    par = {**default_par, **(par or {})}
 
     # Create a deep copy of the DataSet to avoid modifying the original object
     DS = copy.deepcopy(DataSet)
@@ -128,6 +126,8 @@ def filterECGData(DataSet, par=None):
     # Apply the filter to the signal
     if channel == 'ecg':
         DS.ecg.level = pd.Series(signal.filtfilt(b, a, DS.ecg.level))
+    if channel == 'br':
+        DS.br.level = pd.Series(signal.filtfilt(b, a, DS.br.level))
     if channel == 'bp':
         DS.bp.level = pd.Series(signal.filtfilt(b, a, DS.bp.level))
         
@@ -155,18 +155,15 @@ def borderData(DataSet, par=None):
     }
 
     # Merge passed par with default if any
-    if par is None:
-        par = default_par
-    else:
-        par = {**default_par, **par}
+    par = {**default_par, **(par or {})}
 
     # Create a deep copy of the DataSet to avoid modifying the original object
     DS = copy.deepcopy(DataSet)
     # Ensure that events exist in the dataset
     if DS.events is not None and not DS.events.empty:
         # Get the first and last event timestamps
-        first_event_time = DS.events['timestamp'].iloc[0]-1
-        last_event_time = DS.events['timestamp'].iloc[-1]+1
+        first_event_time = DS.events['time'].iloc[0]-1
+        last_event_time = DS.events['time'].iloc[-1]+1
         logger.info(f'Slicing from {first_event_time} to {last_event_time}')
         # Slice TimeSeries based on the first and last event times
         if DS.ecg is not None:
@@ -189,17 +186,16 @@ def classify(data, par=None):
     Returns:
         classID (list): Classification of IBIs ('N', 'L', 'S', 'TL', 'SL', 'SNS').
     """
-    default_par = {"Tw": 51, "Nsd": 4, "Tmax": 5}
+    default_par = {
+        "Tw": 51, 
+        "Nsd": 4, 
+        "Tmax": 5
+    }
     
-    if par is None:
-        par = default_par
-    else:
-        par = {**default_par, **par}
-
-    # Calculate the IBIs
-    IBI = np.append(np.diff(data.RTops['time']), float('nan'))
-    data.RTops['ibi'] = IBI
-
+    # Merge passed par with default if any
+    par = {**default_par, **(par or {})}
+    data.RTops = data.RTops.reset_index(drop=True)
+    IBI = data.RTops['ibi'].reset_index(drop=True)
     # Calculate moving average and standard deviation
     avIBIr = pd.Series(IBI).rolling(window=par["Tw"]).mean().to_numpy()
     SDavIBIr = pd.Series(IBI).rolling(window=par["Tw"]).std().to_numpy()
@@ -210,19 +206,19 @@ def classify(data, par=None):
     # Classifications based on thresholds
     for i in range(len(IBI)):
         if IBI[i] > higher[i]:
-            data.RTops.loc[i, 'ID'] = "L"  # Long IBI
+            data.RTops.at[i,'ID'] = "L"  # Long IBI
         elif IBI[i] < lower[i]:
-            data.RTops.loc[i, 'ID'] = "S"  # Short IBI
+            data.RTops.at[i,'ID'] = "S"  # Short IBI
         elif IBI[i] > par["Tmax"]:
-            data.RTops.loc[i, 'ID'] = "TL"  # Too Long
+            data.RTops.at[i,'ID'] = "TL"  # Too Long
 
     # Short followed by long
     for i in range(len(data.RTops['ID']) - 1):
-        if data.RTops.loc[i, 'ID'] == "S" and data.RTops.loc[i + 1, 'ID'] == "L":
-            data.RTops.loc[i, 'ID'] = "SL"  # Short-long sequence
+        if data.RTops.at[i,'ID'] == "S" and data.RTops.at[i + 1,'ID'] == "L":
+            data.RTops.at[i,'ID'] = "SL"  # Short-long sequence
         if i < len(data.RTops['ID']) - 2:
-            if data.RTops.loc[i, 'ID'] == "S" and data.RTops.loc[i + 1, 'ID'] == "N" and data.RTops.loc[i + 2, 'ID'] == "S":
-                data.RTops.loc[i, 'ID'] = "SNS"  # Short-normal-short sequence
+            if data.RTops.at[i,'ID'] == "S" and data.RTops.at[i + 1,'ID'] == "N" and data.RTops.at[i + 2,'ID'] == "S":
+                data.RTops.at[i,'ID'] = "SNS"  # Short-normal-short sequence
 
     # Count occurrences of each ID
     id_counts = data.RTops['ID'].value_counts()

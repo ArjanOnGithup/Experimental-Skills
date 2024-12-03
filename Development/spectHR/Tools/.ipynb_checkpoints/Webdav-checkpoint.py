@@ -19,7 +19,8 @@ def copyWebdav(fullname):
     fullname = os.path.join(datadir, filename)
         
     logger.info(f'Loading "{filename}"')     
-    if not Path(fullname).exists():
+    file_path = Path(fullname)
+    if not file_path.exists():
         logger.info(f'get {filename} not in local storage')
         webdav = initWebdav()
         remotes = webdav.ls()
@@ -28,6 +29,3 @@ def copyWebdav(fullname):
         if filename in xdf_files:
             logger.info(f'copy {filename} to local ({datadir}) storage')
             webdav.download(filename, fullname)
-        else:
-            return False
-    return True
