@@ -1,4 +1,4 @@
-import pandas as pd
+nuimport pandas as pd
 import numpy as np
 import pyxdf
 import os
@@ -109,7 +109,7 @@ class SpectHRDataset:
         found = Path(filename).exists()            
         
         if use_webdav:
-            found = copyWebdav(filename)
+            found = copy_webdav(filename)
             
         if found:
             self.loadData(filename, ecg_index, br_index, event_index)
