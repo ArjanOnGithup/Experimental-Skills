@@ -59,19 +59,12 @@ def prepPlot(data, x_min=None, x_max=None, plot_poincare=False):
                 (data.RTops["time"] >= x_min - 1) & (data.RTops["time"] <= x_max + 1)
             ]
 
-            # Create a list of tuples (time, ID) from the filtered DataFrame
-            visible_rtops = list(zip(visibles["time"], visibles["ID"]))
-
-            if visible_rtops:
-                if len(visible_rtops) < 100:
-                    plot_rtop_times(
-                        ax_ecg, visible_rtops, line_handler
-                    )  # Plot VLines in the current view
+            if len(visibles) < 100:
+                plot_rtop_times(
+                    ax_ecg, visibles, line_handler
+                )  # Plot VLines in the current view, if there are less then 100
 
             ax_ecg.set_ylim(ax_ecg.get_ylim()[0], ax_ecg.get_ylim()[1] * 1.2)
-            # data.ecg.ibi = np.append(np.diff(data.ecg.RTopTimes), 0)
-            # plot_rtop_times(ax_ecg, zip(data.ecg.RTopTimes, data.ecg.classID, data.ecg.ibi), line_handler)
-
         set_ecg_plot_properties(ax_ecg, x_min, x_max)
 
         # Plot the breathing rate if available in the data
@@ -79,7 +72,6 @@ def prepPlot(data, x_min=None, x_max=None, plot_poincare=False):
             plot_breathing_rate(
                 ax_br, data.br.time, data.br.level, x_min, x_max, line_handler
             )
-
         fig.canvas.draw_idle()
 
     def on_press(event):
@@ -204,22 +196,19 @@ def prepPlot(data, x_min=None, x_max=None, plot_poincare=False):
         ax.spines["left"].set_visible(False)
         return positional_patch
 
-    def plot_rtop_times(ax, vis_rtops, line_handler):
+    def plot_rtop_times(ax, visibles, line_handler):
         """
         Plots vertical lines and arrows for each R-top time with labels indicating the IBI value.
         """
         h = ax.get_ylim()[1] + (0.05 * (ax.get_ylim()[1] - ax.get_ylim()[0]))
-        Rt = [num for num, _ in vis_rtops]
-        ibis = np.append(np.diff(Rt), 0)
-        RTOPS = zip(*zip(*vis_rtops), ibis)
         line_handler.clear()
-        for rtop in tuple(RTOPS):
-            line_handler.add_line(rtop[0], color=RTopColors[rtop[1]])
-            if rtop[2] != 0:
+        for rtop in visibles.itertuples():
+            line_handler.add_line(rtop.time, color=RTopColors[rtop.ID])
+            if rtop.ibi != 0:
                 # Draw a double-sided arrow from the current R-top to the next
                 arrow = FancyArrowPatch(
-                    (rtop[0], h),
-                    (rtop[0] + rtop[2], h),
+                    (rtop.time, h),
+                    (rtop.time + rtop.ibi, h),
                     arrowstyle="<->",
                     color="blue",
                     mutation_scale=15,
@@ -228,9 +217,9 @@ def prepPlot(data, x_min=None, x_max=None, plot_poincare=False):
                 ax.add_patch(arrow)
 
                 ax.text(
-                    rtop[0] + (0.5 * rtop[2]),
+                    rtop.time + (0.5 * rtop.ibi),
                     h,  # Offset above the plot
-                    f"{1000 * rtop[2]:.0f}",
+                    f"{1000 * rtop.ibi:.0f}",
                     fontsize=6,
                     rotation=0,
                     horizontalalignment="center",
@@ -529,7 +518,7 @@ def prepPlot(data, x_min=None, x_max=None, plot_poincare=False):
     prev = v.Btn(
         color="primary",
         class_="ma-2",
-        children=[v.Icon(left=True, children=["fa-chevron-left"])],
+        children=[v.Icon(left=True, children=["fa-chevron-left"]), 'Previous'],
     )
     wider = v.Btn(
         color="primary",
@@ -544,7 +533,7 @@ def prepPlot(data, x_min=None, x_max=None, plot_poincare=False):
     nex = v.Btn(
         color="primary",
         class_="ma-2",
-        children=[v.Icon(left=True, children=["fa-chevron-right"])],
+        children=[v.Icon(left=True, children=["fa-chevron-right"]), 'Next'],
     )
     right = v.Btn(
         color="primary",
