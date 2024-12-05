@@ -1,4 +1,4 @@
-nuimport pandas as pd
+import pandas as pd
 import numpy as np
 import pyxdf
 import os
@@ -6,7 +6,7 @@ from pathlib import Path
 
 from datetime import datetime
 from spectHR.Tools.Logger import logger
-from spectHR.Tools.Webdav import copyWebdav
+from spectHR.Tools.Webdav import copy_webdav
 
 class TimeSeries:
     """
