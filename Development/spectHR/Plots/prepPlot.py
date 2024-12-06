@@ -407,7 +407,7 @@ def prepPlot(data, x_min=None, x_max=None, plot_poincare=False):
         data.RTops.at[closest_idx, "time"] = new_x
         sort_rtop()
 
-    def remove_rtop(old_x):
+    def remove_rtop(old_x, new_x):
         """
         Removes an R-top time.
 
@@ -416,8 +416,8 @@ def prepPlot(data, x_min=None, x_max=None, plot_poincare=False):
         Args:
             old_x (float): original value of the to-be removed r-top
         """
-
-        closest_idx = (data.RTops["time"] - old_x).abs().idxmin()
+        logger.info(f'removing line at: {old_x} vs {new_x}')
+        closest_idx = (data.RTops["time"] - new_x).abs().idxmin()
         data.RTops = data.RTops.drop(index=closest_idx)
         sort_rtop()
 

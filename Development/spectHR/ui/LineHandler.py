@@ -38,7 +38,9 @@ class DraggableVLine:
         if (DraggableVLine.mode == 'Drag') or (DraggableVLine.mode == 'Remove'):
             if (DraggableVLine.active_line is None) and (self.line.contains(event)[0]):
                 DraggableVLine.active_line = self.line
-                self.press = self.line.get_xdata()[0]        
+                self.press = self.line.get_xdata()[0]      
+                logger.info(f'setting active line to line at {self.press}')
+
 
     def on_drag(self, event):
         """
@@ -59,20 +61,25 @@ class DraggableVLine:
         Args:
             event (matplotlib.backend_bases.Event): The mouse release event.
         """
-        if (DraggableVLine.mode != 'Drag' and DraggableVLine.mode != 'Remove') \
-                     or self.press is None \
-                     or event.inaxes is not self.ax:
+        if (DraggableVLine.mode != 'Drag' \
+            and DraggableVLine.mode != 'Remove') \
+                or self.press is None \
+                or event.inaxes is not self.ax:
             return
 
         # Callback with updated x-position if set
-        if DraggableVLine.mode == 'Drag' and DraggableVLine.active_line is self.line \
+        if DraggableVLine.mode == 'Drag' \
+              or self.press is None \
                 and self.callback_drag:
             self.callback_drag(self.press, event.xdata)
 
             
         if DraggableVLine.mode == 'Remove' \
+             or self.press is None \
                 and self.callback_remove:
-            self.callback_remove(self.press)
+            self.callback_remove(self.press, event.xdata)
+            logger.info(f'release line at {self.press}')
+            DraggableVLine.active_line = None
             self.line.remove()
         
         self.press = None
