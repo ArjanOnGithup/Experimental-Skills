@@ -18,8 +18,6 @@ dependencies:
   - numpy
   - pandas
   - pip
-  - plotly
-  - pyarrow
   - python
   - pyxdf  
   - scipy
