@@ -1,5 +1,5 @@
 name:
-  - ExperimentalSkills-spectHR
+  - spectHR
 channels:
   - conda-forge
   - anaconda
@@ -26,4 +26,3 @@ dependencies:
   - seaborn
   - pip:
     - pyhrv
-  
