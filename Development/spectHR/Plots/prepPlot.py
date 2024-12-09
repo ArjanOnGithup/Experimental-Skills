@@ -1,7 +1,7 @@
-import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.ticker import MultipleLocator
 from matplotlib.patches import FancyArrowPatch
+import matplotlib.pyplot as plt
 import matplotlib
 import ipyvuetify as v
 
@@ -96,8 +96,8 @@ def prepPlot(data, x_min=None, x_max=None, plot_poincare=False):
         elif edit_mode == "Add":
             if event.inaxes == ax_ecg:
                 if edit_mode == "Add":
-                    datapoint = {"time": event.xdata, "ID": "N", "ibi": float("nan")}
-                    data.RTops.loc[len(data.RTops)] = datapoint
+                    datapoint = pd.DataFrame([{"time": event.xdata, "ID": "N", "ibi": float("nan")}])
+                    data.RTops = pd.concat([data.RTops, datapoint], ignore_index=True)
                     sort_rtop()
                     update_plot(x_min, x_max)
 
