@@ -6,7 +6,7 @@ from pathlib import Path
 
 from datetime import datetime
 from spectHR.Tools.Logger import logger
-from spectHR.Tools.Webdav import copy_webdav
+from spectHR.Tools.Webdav import copyWebdav
 
 class TimeSeries:
     """
@@ -109,7 +109,7 @@ class SpectHRDataset:
         found = Path(filename).exists()            
         
         if use_webdav:
-            found = copy_webdav(filename)
+            found = copyWebdav(filename)
             
         if found:
             self.loadData(filename, ecg_index, br_index, event_index)

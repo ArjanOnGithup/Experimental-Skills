@@ -4,7 +4,7 @@ from pathlib import Path
 from spectHR.Tools.Logger import logger
 
 
-def init_webdav():
+def initWebdav():
     """
     Initialize a WebDAV connection.
 
@@ -42,7 +42,7 @@ def init_webdav():
     return webdav
 
 
-def copy_webdav(file_path):
+def copyWebdav(file_path):
     """
     Copy a file from the WebDAV server to local storage if it does not exist locally.
 
@@ -72,7 +72,7 @@ def copy_webdav(file_path):
 
         try:
             # Initialize WebDAV connection
-            webdav = init_webdav()
+            webdav = initWebdav()
 
             # List available files on the server
             logger.info('Fetching file list from WebDAV server...')
