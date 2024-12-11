@@ -3,6 +3,7 @@ import numpy as np
 import mplcursors
 import copy
 from matplotlib.patches import Ellipse
+from spectHR.Tools.Params import *
 
 def poincare(dataset):
     """
@@ -57,19 +58,19 @@ def poincare(dataset):
     for epoch in unique_epochs:
         # Mask data for each unique epoch
         mask = epochs == epoch
-        scatter = plt.scatter(x[mask], y[mask], label=f'{epoch}', alpha = 0.3)
+        scatter = plt.scatter(x[mask], y[mask], label=f'{epoch}', alpha = 0.2)
         scatter_handles.append(scatter)
         # Plot Ellises
         # SD1 & SD2 Computation: ref. pyhrv: poincare
-        sd1 = np.std(np.subtract(x[mask], y[mask]) / np.sqrt(2))
-        sd2 = np.std(np.add(x[mask], y[mask]) / np.sqrt(2))
+        _sd1 = np.std(np.subtract(x[mask],  y[mask]) / np.sqrt(2))
+        _sd2 = np.std(np.add(x[mask],  y[mask]) / np.sqrt(2))
         ibm = np.mean(x[mask])
         # Area of ellipse
         # carea = np.pi * sd1 * sd2
         # get the color from the scatter.
         col = scatter.get_facecolor()
 
-        ellipse = Ellipse((ibm, ibm), sd1 * 2, sd2 * 2, angle = -45,linewidth = 2 ,zorder=1, facecolor = col, edgecolor = col, alpha = .1)
+        ellipse = Ellipse((ibm, ibm), _sd1 * 2, _sd2 * 2, angle = -45,linewidth = 2 ,zorder=1, facecolor = col, edgecolor = col)
         fig.axes[0].add_artist(ellipse)
         # Store the global indices of the points in this scatter
         global_indices.append(np.where(mask)[0])
