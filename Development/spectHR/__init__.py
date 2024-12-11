@@ -7,4 +7,3 @@ from spectHR.Tools.Webdav import copyWebdav
 from spectHR.DataSet.SpectHRDataset import SpectHRDataset, TimeSeries
 from spectHR.Actions.csActions import *
 
-

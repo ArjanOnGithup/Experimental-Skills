@@ -96,7 +96,7 @@ def prepPlot(data, x_min=None, x_max=None, plot_poincare=False):
         elif edit_mode == "Add":
             if event.inaxes == ax_ecg:
                 if edit_mode == "Add":
-                    datapoint = pd.DataFrame([{"time": event.xdata, "ID": "N", "ibi": float("nan")}])
+                    datapoint = pd.DataFrame([{"time": event.xdata, "ID": "N", "epoch": None,"ibi": float("nan")}])
                     data.RTops = pd.concat([data.RTops, datapoint], ignore_index=True)
                     sort_rtop()
                     update_plot(x_min, x_max)

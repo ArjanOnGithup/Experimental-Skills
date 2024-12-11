@@ -134,11 +134,15 @@ class SpectHRDataset:
         # Identify ECG stream automatically if not provided
         if ecg_index is None:
             ecg_index = next((i for i, d in enumerate(rawdata) if d['info']['name'][0].startswith('Polar')), None)
+            if ecg_index is None:
+                logger.info("There is no stream named 'Polar'")
 
         # Identify event stream automatically if not provided
         if event_index is None:
             event_index = next((i for i, d in enumerate(rawdata) if d['info']['name'][0].startswith('TaskMarkers')), None)
-
+            if event_index is None:
+                logger.info("There is no stream named 'TaskMarkers'")
+                
         # Load ECG data
         if ecg_index is not None:
             ecg_timestamps = pd.Series(rawdata[ecg_index]["time_stamps"])
@@ -147,13 +151,14 @@ class SpectHRDataset:
             ecg_levels = pd.Series(rawdata[ecg_index]["time_series"].flatten())
             ecg_timestamps -= self.starttime
             # pragmatic apprauch. Might do better. This flips the signal if it thinks it needs to...
-            if .9*abs(np.mean(ecg_levels) - np.min(ecg_levels)) > abs(np.mean(ecg_levels) - np.max(ecg_levels)): 
+            if abs(np.mean(ecg_levels) - np.min(ecg_levels)) > abs(np.mean(ecg_levels) - np.max(ecg_levels)): 
                 logger.info('flipping the signal')
                 ecg_levels = -ecg_levels
             self.ecg = TimeSeries(ecg_timestamps, ecg_levels)
 
         # Load breathing data
         if br_index is not None:
+            logger.info("Expecting Breathing data")
             br_timestamps = pd.Series(rawdata[br_index]["time_stamps"])
             br_levels = pd.Series(rawdata[br_index]["time_series"].flatten())
             br_timestamps -= self.starttime
@@ -162,6 +167,7 @@ class SpectHRDataset:
 
         # Load bloodpressure data
         if bp_index is not None:
+            logger.info("Expecting Bloodpressure data")
             bp_timestamps = pd.Series(rawdata[bp_index]["time_stamps"])
             bp_levels = pd.Series(rawdata[bp_index]["time_series"].flatten())
             bp_timestamps -= self.starttime
