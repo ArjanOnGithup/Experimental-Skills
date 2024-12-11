@@ -14,6 +14,7 @@ dependencies:
   - jupyter
   - jupyterlab
   - matplotlib
+  - mplcursors
   - numba
   - numpy
   - pandas
