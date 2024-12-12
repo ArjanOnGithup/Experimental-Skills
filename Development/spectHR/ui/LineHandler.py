@@ -22,7 +22,7 @@ class DraggableVLine:
             callback_drag (callable, optional): Callback for when the line is dragged.
         """
         self.ax = ax
-        self.line = self.ax.axvline(x=x_position, color=color, lw=1, linestyle='-.', picker=True, pickradius = 10,  alpha = .7)
+        self.line = self.ax.axvline(x=x_position, color=color, lw=.8, linestyle='-', picker=True, pickradius = 10,  alpha = .5)
         self.callback_drag = callback_drag
         self.callback_remove = callback_remove
         self.press = None

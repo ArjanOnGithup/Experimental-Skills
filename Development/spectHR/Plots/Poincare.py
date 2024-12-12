@@ -3,30 +3,10 @@ import numpy as np
 import mplcursors
 import copy
 from matplotlib.patches import Ellipse
+from ipywidgets import HBox, VBox, Checkbox, Output, Layout
 from spectHR.Tools.Params import *
 
 def poincare(dataset):
-    """
-    Generates a Poincaré plot for the given dataset.
-
-    A Poincaré plot is a scatter plot of consecutive inter-beat intervals (IBIs).
-    The x-axis represents the current IBI, and the y-axis represents the next IBI.
-    Points are color-coded by epoch, and hovering over a point reveals its epoch 
-    and corresponding time.
-
-    Parameters:
-    -----------
-    dataset : object
-        An object containing a DataFrame `RTops` with the following columns:
-        - 'ibi' (float): Inter-beat intervals (in milliseconds).
-        - 'epoch' (str or int): Epoch labels.
-        - 'time' (float): Time values associated with each IBI.
-
-    Returns:
-    --------
-    None
-        Displays an interactive scatter plot in a Matplotlib figure.
-    """
     # Make a deep copy of the DataFrame and filter out rows with NaN in the 'epoch' column
     df = copy.deepcopy(dataset.RTops).dropna(subset=['epoch'])
 
@@ -43,69 +23,88 @@ def poincare(dataset):
     df['epoch'] = df['epoch'].astype(str)
     
     # Extract x (current IBI), y (next IBI), epochs, and times
-    x = df['ibi'][:-1].values  # Current IBI
-    y = df['ibi'][1:].values   # Next IBI
-    epochs = df['epoch'][:-1].values  # Epoch labels (aligned with x)
-    times = df['time'][:-1].values    # Time values (aligned with x)
+    x = df['ibi'][:-1].values
+    y = df['ibi'][1:].values
+    epochs = df['epoch'][:-1].values
+    times = df['time'][:-1].values
 
+    # Create the figure
+    fig, ax = plt.subplots(figsize=(5, 5))
+    scatter_handles = {}
+    ellipse_handles = {}
+    global_indices = {}
 
-    # Create the figure and scatter plot
-    fig = plt.figure(figsize=(5, 5))
     unique_epochs = np.unique(epochs)
-    scatter_handles = []
-    global_indices = []
-
     for epoch in unique_epochs:
         # Mask data for each unique epoch
         mask = epochs == epoch
-        scatter = plt.scatter(x[mask], y[mask], label=f'{epoch}', alpha = 0.2)
-        scatter_handles.append(scatter)
-        # Plot Ellises
-        # SD1 & SD2 Computation: ref. pyhrv: poincare
-        _sd1 = np.std(np.subtract(x[mask],  y[mask]) / np.sqrt(2))
-        _sd2 = np.std(np.add(x[mask],  y[mask]) / np.sqrt(2))
-        ibm = np.mean(x[mask])
-        # Area of ellipse
-        # carea = np.pi * sd1 * sd2
-        # get the color from the scatter.
-        col = scatter.get_facecolor()
+        scatter = ax.scatter(x[mask], y[mask], label=f'{epoch}', alpha=0.4)
+        scatter_handles[epoch] = scatter
 
-        ellipse = Ellipse((ibm, ibm), _sd1 * 2, _sd2 * 2, angle = -45,linewidth = 2 ,zorder=1, facecolor = col, edgecolor = col)
-        fig.axes[0].add_artist(ellipse)
+        # Compute SD1 & SD2
+        _sd1 = np.std(np.subtract(x[mask], y[mask]) / np.sqrt(2))
+        _sd2 = np.std(np.add(x[mask], y[mask]) / np.sqrt(2))
+        ibm = np.mean(x[mask])
+        col = scatter.get_facecolor()
+        ellipse = Ellipse(
+            (ibm, ibm), _sd1 * 2, _sd2 * 2, angle=-45,
+            linewidth=2, zorder=1, facecolor=col, edgecolor=col
+        )
+        ax.add_artist(ellipse)
+        ellipse_handles[epoch] = ellipse
+
         # Store the global indices of the points in this scatter
-        global_indices.append(np.where(mask)[0])
+        global_indices[epoch] = np.where(mask)[0]
 
     # Add hover functionality with mplcursors
-    cursor = mplcursors.cursor(scatter_handles, highlight=True, hover=False)
-
+    cursor = mplcursors.cursor(list(scatter_handles.values()), highlight=True, hover=False)
     def on_hover(sel):
-        """
-        Event handler for hover interactions. Updates the annotation text.
-
-        Parameters:
-        -----------
-        sel : mplcursors.Selection
-            The selected data point.
-        """
         # Get the global index of the selected point
-        scatter_idx = scatter_handles.index(sel.artist)
-        global_idx = global_indices[scatter_idx][sel.index]
+        scatter_idx = list(scatter_handles.values()).index(sel.artist)
+        epoch = list(scatter_handles.keys())[scatter_idx]
+        global_idx = global_indices[epoch][sel.index]
 
         # Update the annotation with the correct global values
         sel.annotation.set_text(
             f"Epoch: {epochs[global_idx]}\nTime: {round(times[global_idx], 2)}"
         )
-
-    # Connect the hover callback to the cursor
     cursor.connect("add", on_hover)
 
     # Plot formatting
-    plt.title('Poincaré Plot', fontsize=14)
-    plt.xlabel('IBI (ms)', fontsize=12)
-    plt.ylabel('Next IBI (ms)', fontsize=12)
-    plt.axline((0, 0), slope=1, color='gray', linestyle='--', linewidth=0.7)
-    plt.legend(fontsize=5, title="Epochs")
-    plt.grid(True)
+    ax.set_title('Poincaré Plot', fontsize=14)
+    ax.set_xlabel('IBI (ms)', fontsize=12)
+    ax.set_ylabel('Next IBI (ms)', fontsize=12)
+    ax.axline((0, 0), slope=1, color='gray', linestyle='--', linewidth=0.7)
+    #ax.legend(fontsize=5, title="Epochs")
+    ax.grid(True)
 
-    # Display the plot
-    plt.show()
+    # Output widget for the plot
+    plot_output = Output()
+    with plot_output:
+        plt.show()
+
+    # Create checkboxes for each epoch
+    # Define a layout with minimal spacing for the VBox containing the checkboxes
+    vbox_layout = Layout(display='flex', flex_flow='column', align_items='flex-start', gap='0px')
+    # Define a layout with no margin for individual checkboxes
+    checkbox_layout = Layout(margin='0px', padding='0px',  height='20px')
+
+    checkboxes = {}
+    def update_visibility(change):
+        epoch = change.owner.description
+        visible = change.new
+        scatter_handles[epoch].set_visible(visible)
+        ellipse_handles[epoch].set_visible(visible)
+        with plot_output:
+            fig.canvas.draw_idle()
+
+    for epoch in unique_epochs:
+        checkbox = Checkbox(value=True, description=epoch,  layout=checkbox_layout)
+        checkbox.observe(update_visibility, names='value')
+        checkboxes[epoch] = checkbox
+
+    # Create the HBox with the VBox for checkboxes and the plot output
+    return HBox([VBox(list(checkboxes.values()), layout=vbox_layout), plot_output])
+# Example usage
+# Replace `your_dataset` with your actual dataset object
+# poincare_with_checkboxes(your_dataset)

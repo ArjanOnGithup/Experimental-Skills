@@ -34,7 +34,7 @@ def prepPlot(data, x_min=None, x_max=None, plot_poincare=False):
     # Local Functions:
     logger.info(f"Created a prepPlot")
     RTopColors = {
-        "N": "green",
+        "N": "blue",
         "L": "cyan",
         "S": "magenta",
         "TL": "orange",
@@ -211,7 +211,7 @@ def prepPlot(data, x_min=None, x_max=None, plot_poincare=False):
                     (rtop.time + rtop.ibi, h),
                     arrowstyle="<->",
                     color="blue",
-                    mutation_scale=15,
+                    mutation_scale=5,
                     linewidth=0.5,
                 )
                 ax.add_patch(arrow)
@@ -236,33 +236,24 @@ def prepPlot(data, x_min=None, x_max=None, plot_poincare=False):
         """
         Configure ECG plot properties.
         """
-        ldisp = int(math.log10(abs(data.ecg.level.max() - data.ecg.level.min())))
+        #ldisp = int(math.log10(abs(data.ecg.level.max() - data.ecg.level.min())))
         tdisp = round(math.log10(x_max - x_min), 0)
 
         ax.set_title("")
         ax.set_xlabel("Time (seconds)")
-        # ax.set_ylabel('ECG Level (mV)')
         ax.set_xlim(x_min, x_max)
-
         ax.xaxis.set_major_locator(
             MultipleLocator(math.pow(10, tdisp - 1))
         )  # Major ticks every 1 second
         ax.xaxis.set_minor_locator(
             MultipleLocator(math.pow(10, tdisp - 1) / 5)
         )  # Minor ticks every 0.2 seconds
-        # ax.xaxis.set_minor_locator(AutoMinorLocator())  # Minor ticks every 0.2 seconds
-
-        ax.yaxis.set_major_locator(MultipleLocator(math.pow(10, ldisp)))
-        ax.yaxis.set_minor_locator(MultipleLocator(math.pow(10, ldisp) / 5))
-        # Remove y-axis ticks but keep the grid
-        ax.set_yticks([])
-        ax.xaxis.grid(which="minor", color="salmon", lw=0.3)
-        ax.xaxis.grid(which="major", color="r", lw=0.7)
-        ax.yaxis.grid(which="minor", color="salmon", lw=0.3)
-        ax.yaxis.grid(which="major", color="r", lw=0.7)
-
-        ax.grid(True, "major", alpha=0.3)
-        ax.grid(True, "minor", alpha=0.2)
+        #ax.xaxis.grid(which="minor", color="salmon", lw=0.3)
+        #ax.xaxis.grid(which="major", color="r", lw=0.7)
+        ax.get_yaxis().set_visible(False)
+        ax.spines[["right", "left", "top"]].set_visible(False)
+        #ax.grid(False, "major", alpha=0.3)
+        #ax.grid(False, "minor", alpha=0.2)
 
     def plot_ecg_signal(ax, ecg_time, ecg_level):
         """
@@ -273,9 +264,9 @@ def prepPlot(data, x_min=None, x_max=None, plot_poincare=False):
             ecg_time,
             ecg_level,
             label="ECG Signal",
-            color="blue",
-            linewidth=0.7,
-            alpha=0.8,
+            color="red",
+            linewidth=.8,
+            alpha=1,
         )
 
     def plot_breathing_rate(ax, br_time, br_level, x_min, x_max, line_handler):
