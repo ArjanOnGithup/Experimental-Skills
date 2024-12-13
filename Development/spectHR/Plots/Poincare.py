@@ -5,6 +5,7 @@ import copy
 from matplotlib.patches import Ellipse
 from ipywidgets import HBox, VBox, Checkbox, Output, Layout
 from spectHR.Tools.Params import *
+from spectHR.Tools.Logger import logger
 
 def poincare(dataset):
     # Make a deep copy of the DataFrame and filter out rows with NaN in the 'epoch' column
@@ -35,10 +36,13 @@ def poincare(dataset):
     global_indices = {}
     unique_epochs = np.unique(epochs)
     # make sure there is an selection list
-    if not hasattr(dataset, 'active_epochs')
-        dataset.active_epochs = [True] * len(unique_epochs)
-    
+    if not hasattr(dataset, 'active_epochs'):
+        dataset.active_epochs = {}
+        for epoch in unique_epochs:
+            dataset.active_epochs.update({epoch: True})
+            
     for epoch in unique_epochs:
+        visible = dataset.active_epochs[epoch]
         # Mask data for each unique epoch
         mask = epochs == epoch
         scatter = ax.scatter(x[mask], y[mask], label=f'{epoch}', alpha=0.4)
@@ -55,6 +59,8 @@ def poincare(dataset):
         )
         ax.add_artist(ellipse)
         ellipse_handles[epoch] = ellipse
+        scatter_handles[epoch].set_visible(visible)
+        ellipse_handles[epoch].set_visible(visible)
 
         # Store the global indices of the points in this scatter
         global_indices[epoch] = np.where(mask)[0]
@@ -69,7 +75,7 @@ def poincare(dataset):
 
         # Update the annotation with the correct global values
         sel.annotation.set_text(
-            f"Epoch: {epochs[global_idx]}\nTime: {round(times[global_idx], 2)}"
+            f"{epochs[global_idx]}\nTime: {round(times[global_idx], 2)}"
         )
     cursor.connect("add", on_hover)
 
@@ -98,11 +104,13 @@ def poincare(dataset):
         visible = change.new
         scatter_handles[epoch].set_visible(visible)
         ellipse_handles[epoch].set_visible(visible)
+        dataset.active_epochs[epoch] = visible
+
         with plot_output:
             fig.canvas.draw_idle()
     
     for epoch in unique_epochs:
-        checkbox = Checkbox(value=True, description=epoch,  layout=checkbox_layout)
+        checkbox = Checkbox(value=dataset.active_epochs[epoch] , description=epoch,  layout=checkbox_layout)
         checkbox.observe(update_visibility, names='value')
         checkboxes[epoch] = checkbox
 
