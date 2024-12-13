@@ -33,8 +33,11 @@ def poincare(dataset):
     scatter_handles = {}
     ellipse_handles = {}
     global_indices = {}
-
     unique_epochs = np.unique(epochs)
+    # make sure there is an selection list
+    if not hasattr(dataset, 'active_epochs')
+        dataset.active_epochs = [True] * len(unique_epochs)
+    
     for epoch in unique_epochs:
         # Mask data for each unique epoch
         mask = epochs == epoch
@@ -97,7 +100,7 @@ def poincare(dataset):
         ellipse_handles[epoch].set_visible(visible)
         with plot_output:
             fig.canvas.draw_idle()
-
+    
     for epoch in unique_epochs:
         checkbox = Checkbox(value=True, description=epoch,  layout=checkbox_layout)
         checkbox.observe(update_visibility, names='value')
@@ -105,6 +108,4 @@ def poincare(dataset):
 
     # Create the HBox with the VBox for checkboxes and the plot output
     return HBox([VBox(list(checkboxes.values()), layout=vbox_layout), plot_output])
-# Example usage
-# Replace `your_dataset` with your actual dataset object
-# poincare_with_checkboxes(your_dataset)
+
