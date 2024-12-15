@@ -82,7 +82,7 @@ class SpectHRDataset:
         log_action(action_name, params):
             Logs an action with its parameters into the dataset history.
     """
-    def __init__(self, filename, ecg_index=None, br_index=None, event_index=None, par=None, use_webdav = False):
+    def __init__(self, filename, ecg_index=None, br_index=None, event_index=None, par=None, reset = False, use_webdav = False):
         """
         Initializes the SpectHRDataset by loading data from a file.
 
@@ -115,7 +115,7 @@ class SpectHRDataset:
                 copyWebdav(self.file_path)
 
         # Load data from pickle if available; otherwise, process the XDF file
-        if Path(self.pkl_path).exists():
+        if Path(self.pkl_path).exists() and not reset:
             logger.info(f"Loading dataset from pickle: {self.pkl_path}")
             self.load_from_pickle()
         elif Path(self.file_path).exists():

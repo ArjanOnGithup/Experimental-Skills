@@ -84,7 +84,13 @@ def poincare(dataset):
     ax.set_xlabel('IBI (ms)', fontsize=12)
     ax.set_ylabel('Next IBI (ms)', fontsize=12)
     ax.axline((0, 0), slope=1, color='gray', linestyle='--', linewidth=0.7)
-    ax.legend(fontsize=5, title="Epochs")
+    
+    labels = [item for item, visible in zip(unique_epochs, dataset.active_epochs.values()) if visible]
+    # Create a list of scatter plot handles for visible epochs
+    leghandle = [scatter_handles[epoch] for epoch, visible in zip(unique_epochs, dataset.active_epochs.values()) if visible]
+    logger.info(labels)
+    logger.info(dataset.active_epochs)
+    ax.legend(handles = leghandle, fontsize=5, title=None)
     ax.grid(True)
 
     # Output widget for the plot
