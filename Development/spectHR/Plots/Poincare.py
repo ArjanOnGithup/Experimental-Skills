@@ -45,7 +45,7 @@ def poincare(dataset):
         visible = dataset.active_epochs[epoch]
         # Mask data for each unique epoch
         mask = epochs == epoch
-        scatter = ax.scatter(x[mask], y[mask], label=f'{epoch}', alpha=0.4)
+        scatter = ax.scatter(x[mask], y[mask], label=f'{epoch}'.title(), alpha=0.25)
         scatter_handles[epoch] = scatter
 
         # Compute SD1 & SD2
