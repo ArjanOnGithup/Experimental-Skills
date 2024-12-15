@@ -3,6 +3,7 @@ import numpy as np
 import pyxdf
 import os
 from pathlib import Path
+import pickle
 
 from datetime import datetime
 from spectHR.Tools.Logger import logger
@@ -105,20 +106,48 @@ class SpectHRDataset:
 
         self.datadir = os.path.dirname(filename)
         self.filename = os.path.basename(filename)
-        filename = os.path.join(self.datadir, self.filename)
-        found = Path(filename).exists()            
-        
-        if use_webdav:
-            found = copyWebdav(filename)
-            
-        if found:
-            self.loadData(filename, ecg_index, br_index, event_index)
-        else:
-            logger.error(f"file {filename} was not found")
+        self.pkl_filename = os.path.splitext(self.filename)[0] + ".pkl"
+        self.pkl_path = os.path.join(self.datadir, self.pkl_filename)
+        self.file_path = os.path.join(self.datadir, self.filename)
 
-    def saveData(self, filename):
-        pass
-        
+        if use_webdav:
+            if not Path(self.file_path).exists():
+                copyWebdav(self.file_path)
+
+        # Load data from pickle if available; otherwise, process the XDF file
+        if Path(self.pkl_path).exists():
+            logger.info(f"Loading dataset from pickle: {self.pkl_path}")
+            self.load_from_pickle()
+        elif Path(self.file_path).exists():
+            logger.info(f"Loading dataset from XDF: {self.file_path}")
+            self.loadData(self.file_path, ecg_index, br_index, event_index)
+            self.save()
+        else:
+            logger.error(f"File {self.file_path} was not found")
+
+    def save(self):
+        """
+        Saves the current state of the dataset as a pickle file.
+        """
+        try:
+            with open(self.pkl_path, "wb") as pkl_file:
+                pickle.dump(self, pkl_file)
+            logger.info(f"Dataset saved as pickle: {self.pkl_path}")
+        except Exception as e:
+            logger.error(f"Failed to save pickle file: {e}")
+
+    def load_from_pickle(self):
+        """
+        Loads the dataset from a pickle file.
+        """
+        try:
+            with open(self.pkl_path, "rb") as pkl_file:
+                data = pickle.load(pkl_file)
+            self.__dict__.update(data.__dict__)
+            logger.info("Dataset loaded successfully from pickle")
+        except Exception as e:
+            logger.error(f"Failed to load pickle file: {e}")
+            
     def loadData(self, filename, ecg_index=None, br_index=None, bp_index=None, event_index=None):
         """
         Loads data from an XDF file into the dataset.
