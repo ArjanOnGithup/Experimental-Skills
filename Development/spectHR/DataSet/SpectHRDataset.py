@@ -218,38 +218,54 @@ class SpectHRDataset:
         """
         Creates an 'epoch' series within the dataset to map each time point in the ECG
         to a corresponding epoch based on event labels ('start' and 'end').
-
+    
         Returns:
-            pd.Series: A series with epoch labels for each time index in the ECG and RTopTimes.
+            pd.Series: A series with epoch labels (lists) for each time index in the ECG and RTopTimes.
         """
         if self.events is None:
-            logger.error('No events availeable for epoch generation')
-
-        self.ecg_epoch = pd.Series(index=self.ecg.time.index, dtype="object")
-
+            logger.error('No events available for epoch generation')
+            return
+    
+        # Initialize the epoch series as a series of lists
+        self.epoch = pd.Series(index=self.ecg.time.index, dtype="object").map(lambda x: [])
+    
         labels = self.events['label'].str.lower()
         start_indices = self.events[labels.str.startswith('start')].index
         end_indices = self.events[labels.str.startswith('end')].index
-
-        # Create epoch identifiers
-        epoch_id = None
+    
+        # Loop through each 'start' event
         for start_idx in start_indices:
             epoch_name = self.events['label'][start_idx][5:].strip()  # Get the epoch name
             start_time = self.events['time'][start_idx]
-
-            # Find the corresponding 'end' time
-            if len(end_indices) > 0 and end_indices[0] > start_idx:
-                end_time = self.events['time'][end_indices[0]]
+    
+            # Find the corresponding 'end' event with the same epoch name
+            same_epoch_end_indices = end_indices[self.events['label'][end_indices].str[4:].str.strip() == epoch_name]
+            same_epoch_end_indices = same_epoch_end_indices[same_epoch_end_indices > start_idx] # force end to be after start
+    
+            if not same_epoch_end_indices.empty:
+                # Use the first matching 'end'
+                end_time = self.events['time'][same_epoch_end_indices[0]]
             else:
-                # Handle missing 'end', use next 'start' or end of data
-                end_time = (
-                    self.events['time'][start_indices[start_indices.get_loc(start_idx) + 1]]
-                    if start_idx + 1 < len(start_indices)
-                    else self.ecg.time.iloc[-1]
-                )
-
+                # No matching 'end', use the next 'start' or end of data
+                next_start_idx = start_indices[start_indices.get_loc(start_idx) + 1] if start_idx + 1 < len(start_indices) else None
+                end_time = self.events['time'][next_start_idx] if next_start_idx else self.ecg.time.iloc[-1]
+    
             # Assign epoch label to the time series (ecg and RTopTimes)
-            self.ecg_epoch.loc[(self.ecg.time >= start_time) & (self.ecg.time <= end_time)] = epoch_name
+            for idx in self.epoch.loc[(self.ecg.time >= start_time) & (self.ecg.time <= end_time)].index:
+                self.epoch.at[idx].append(epoch_name)
+                
+        self.epoch = self.epoch.apply(lambda x: ["None"] if isinstance(x, list) and not x else x)
+
+                
+        self.unique_epochs = self.get_unique_epochs()
+
+    def get_unique_epochs(self):
+        """
+        Returns a set of unique epoch names from the_epoch series.
+        """        # Flatten all lists into one and find unique values
+        all_epochs = [epoch for sublist in self.epoch.dropna() for epoch in sublist]
+        unique_epochs = set(all_epochs)
+        return unique_epochs
         
     def log_action(self, action_name, params):
         """

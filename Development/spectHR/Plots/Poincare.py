@@ -26,7 +26,7 @@ def poincare(dataset):
     # Extract x (current IBI), y (next IBI), epochs, and times
     x = df['ibi'][:-1].values
     y = df['ibi'][1:].values
-    epochs = df['epoch'][:-1].values
+    epochs = df['epoch']
     times = df['time'][:-1].values
 
     # Create the figure
@@ -34,7 +34,7 @@ def poincare(dataset):
     scatter_handles = {}
     ellipse_handles = {}
     global_indices = {}
-    unique_epochs = np.unique(epochs)
+    unique_epochs = dataset.unique_epochs
     # make sure there is an selection list
     if not hasattr(dataset, 'active_epochs'):
         dataset.active_epochs = {}
@@ -43,11 +43,15 @@ def poincare(dataset):
             
     for epoch in unique_epochs:
         visible = dataset.active_epochs[epoch]
-        # Mask data for each unique epoch
-        mask = epochs == epoch
+        # mask = epochs == epoch
+        # Create a mask for the current epoch
+        
+        mask = epochs.apply(lambda x: epoch in x)
+        mask = mask[:-1]
+        
         scatter = ax.scatter(x[mask], y[mask], label=f'{epoch}'.title(), alpha=0.25)
         scatter_handles[epoch] = scatter
-
+        
         # Compute SD1 & SD2
         _sd1 = np.std(np.subtract(x[mask], y[mask]) / np.sqrt(2))
         _sd2 = np.std(np.add(x[mask], y[mask]) / np.sqrt(2))
@@ -88,8 +92,6 @@ def poincare(dataset):
     labels = [item for item, visible in zip(unique_epochs, dataset.active_epochs.values()) if visible]
     # Create a list of scatter plot handles for visible epochs
     leghandle = [scatter_handles[epoch] for epoch, visible in zip(unique_epochs, dataset.active_epochs.values()) if visible]
-    logger.info(labels)
-    logger.info(dataset.active_epochs)
     ax.legend(handles = leghandle, fontsize=5, title=None)
     ax.grid(True)
 

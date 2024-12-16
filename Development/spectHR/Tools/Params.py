@@ -17,7 +17,7 @@ def ellipse_area(ibi):
 
 def sdsd(ibi):
     try:
-        ret = pyhrv.time_domain.sdsd(np.asarray(ibi))
+        ret = pyhrv.time_domain.sdsd(np.asarray(ibi))[0]
     except:
         ret = np.nan
     return ret

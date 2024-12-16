@@ -61,7 +61,7 @@ def calcPeaks(DataSet, par=None):
     logger.info(f"Found {len(locs)} r-tops")
 
     # Step 7: Update the dataset's RTopTimes with the time stamps corresponding to the detected peaks
-    DS.RTops = pd.DataFrame({'time': (DS.ecg.time.iloc[locs] + correction).tolist(), 'epoch': DS.ecg_epoch.iloc[locs]})
+    DS.RTops = pd.DataFrame({'time': (DS.ecg.time.iloc[locs] + correction).tolist(), 'epoch': DS.epoch.iloc[locs]})
     # Step 8: If warrented: classify and label the peaks 
     # Calculate the IBIs
     IBI = np.append(np.diff(DS.RTops['time']), float('nan'))
