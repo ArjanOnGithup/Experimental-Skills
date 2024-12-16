@@ -39,7 +39,7 @@ def gantt(dataset, labels = False):
     color_dict = dict(zip(epoch_names, colors))  # Map epoch names to colors
 
     # Plot the Gantt chart
-    fig, ax = plt.subplots(figsize=(12, 5))
+    fig, ax = plt.subplots(figsize=(15, 5))
     
     # Create horizontal bars with custom colors
     for i, epoch in enumerate(epoch_names):

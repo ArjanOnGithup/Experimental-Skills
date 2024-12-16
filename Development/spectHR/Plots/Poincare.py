@@ -31,6 +31,7 @@ def poincare(dataset):
 
     # Create the figure
     fig, ax = plt.subplots(figsize=(5, 5))
+    fig.canvas.toolbar_visible = False
     scatter_handles = {}
     ellipse_handles = {}
     global_indices = {}

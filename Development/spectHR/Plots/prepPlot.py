@@ -135,7 +135,7 @@ def prepPlot(data, x_min=None, x_max=None, plot_poincare=False):
     # Helper to get figure dimensions in inches
     def calculate_figsize():
         dpi = matplotlib.rcParams["figure.dpi"]  # Get the current DPI setting
-        return (1280 / dpi, 370 / dpi)
+        return (15,5)
 
     def create_figure_axes(data):
         """
