@@ -255,8 +255,6 @@ class SpectHRDataset:
                 self.epoch.at[idx].append(epoch_name)
                 
         self.epoch = self.epoch.apply(lambda x: ["None"] if isinstance(x, list) and not x else x)
-
-                
         self.unique_epochs = self.get_unique_epochs()
 
     def get_unique_epochs(self):

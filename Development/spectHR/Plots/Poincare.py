@@ -41,7 +41,7 @@ def poincare(dataset):
         for epoch in unique_epochs:
             dataset.active_epochs.update({epoch: True})
             
-    for epoch in unique_epochs:
+    for epoch in sorted(unique_epochs):
         visible = dataset.active_epochs[epoch]
         # mask = epochs == epoch
         # Create a mask for the current epoch
@@ -61,6 +61,7 @@ def poincare(dataset):
             (ibm, ibm), _sd1 * 2, _sd2 * 2, angle=-45,
             linewidth=2, zorder=1, facecolor=col, edgecolor=col
         )
+        
         ax.add_artist(ellipse)
         ellipse_handles[epoch] = ellipse
         scatter_handles[epoch].set_visible(visible)
@@ -89,10 +90,11 @@ def poincare(dataset):
     ax.set_ylabel('Next IBI (ms)', fontsize=12)
     ax.axline((0, 0), slope=1, color='gray', linestyle='--', linewidth=0.7)
     
-    labels = [item for item, visible in zip(unique_epochs, dataset.active_epochs.values()) if visible]
-    # Create a list of scatter plot handles for visible epochs
-    leghandle = [scatter_handles[epoch] for epoch, visible in zip(unique_epochs, dataset.active_epochs.values()) if visible]
-    ax.legend(handles = leghandle, fontsize=5, title=None)
+    #labels = [item for item, visible in zip(unique_epochs, dataset.active_epochs.values()) if visible]
+    # Filter scatter handles based on the dict_values
+    scatters = [handle for label, handle in scatter_handles.items() if dataset.active_epochs[label]]
+
+    ax.legend(handles = scatters, fontsize=5, title=None)
     ax.grid(True)
 
     # Output widget for the plot
@@ -117,7 +119,7 @@ def poincare(dataset):
         with plot_output:
             fig.canvas.draw_idle()
     
-    for epoch in unique_epochs:
+    for epoch in sorted(unique_epochs):
         checkbox = Checkbox(value=dataset.active_epochs[epoch] , description=epoch,  layout=checkbox_layout)
         checkbox.observe(update_visibility, names='value')
         checkboxes[epoch] = checkbox
