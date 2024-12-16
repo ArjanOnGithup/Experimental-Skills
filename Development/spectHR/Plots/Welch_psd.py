@@ -1,5 +1,8 @@
 import pyhrv
 
+def plot_psd(RTops = None):
+    return RTops.groupby('epoch', group_keys=False)[RTops.columns.tolist()].apply(welch_psd, include_groups=True)
+
 def welch_psd(RTops = None, mode = 'dev'):
     titlestring = RTops['epoch'].iloc[0]
     res = None

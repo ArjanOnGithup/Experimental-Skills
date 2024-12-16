@@ -3,10 +3,12 @@ from spectHR.Plots.prepPlot import prepPlot
 
 from spectHR.Plots.Poincare import poincare
 from spectHR.Plots.Gantt import gantt
-from spectHR.Plots.Welch_psd import welch_psd
+from spectHR.Plots.Welch_psd import welch_psd, plot_psd
 
 from spectHR.Tools.Logger import logger, handler
 from spectHR.Tools.Webdav import copyWebdav
+from spectHR.Tools.Explode import explode
+
 from spectHR.DataSet.SpectHRDataset import SpectHRDataset, TimeSeries
 from spectHR.Actions.csActions import *
 

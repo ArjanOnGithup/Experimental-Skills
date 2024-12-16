@@ -30,7 +30,7 @@ def poincare(dataset):
     times = df['time'][:-1].values
 
     # Create the figure
-    fig, ax = plt.subplots(figsize=(5, 5))
+    fig, ax = plt.subplots(figsize=(7, 7))
     fig.canvas.toolbar_visible = False
     scatter_handles = {}
     ellipse_handles = {}
@@ -126,5 +126,5 @@ def poincare(dataset):
         checkboxes[epoch] = checkbox
 
     # Create the HBox with the VBox for checkboxes and the plot output
-    return HBox([VBox(list(checkboxes.values()), layout=vbox_layout), plot_output])
+    return HBox([plot_output, VBox(list(checkboxes.values())[::-1], layout=vbox_layout)])
 
