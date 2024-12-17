@@ -177,9 +177,9 @@ In spectHR, Poincaré plots help assess the regularity and variability of the he
 
 Given a sequence of inter-beat intervals (IBI):
 
-$$ IBI_1, IBI_2, IBI_3, \dots, IBI_n
+$`IBI_1, IBI_2, IBI_3, \dots, IBI_n
 
-(IBI_i, IBI_{i+1}) $$
+(IBI_i, IBI_{i+1})`$
 
 This creates a scatter plot where the x-axis represents  (current interval) and the y-axis represents  (next interval).
 
