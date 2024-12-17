@@ -93,8 +93,6 @@ class SpectHRDataset:
             event_index (int, optional): Index of the event stream in the XDF file. Defaults to None.
             par (dict, optional): Initial parameters for the dataset. Defaults to None.
         """
-        
-        
         self.ecg = None
         self.br = None
         self.bp = None
@@ -107,9 +105,18 @@ class SpectHRDataset:
         self.datadir = os.path.dirname(filename)
         self.filename = os.path.basename(filename)
         self.pkl_filename = os.path.splitext(self.filename)[0] + ".pkl"
-        self.pkl_path = os.path.join(self.datadir, self.pkl_filename)
         self.file_path = os.path.join(self.datadir, self.filename)
-
+        
+        if not self.datadir:
+            self.datadir=os.getcwd()
+            logger.info(f'set the datadir to the current wd: {self.datadir}')
+            
+        if not Path(self.datadir + '\\cache').exists():
+            logger.info(f'Creating cache dir: {self.datadir + '\\cache'}')
+            os.makedirs(self.datadir + '\\cache')
+            
+        self.pkl_path = os.path.join(self.datadir + '\\cache', self.pkl_filename)
+        logger.info(f'pkl_name is now {self.pkl_path}')
         if use_webdav:
             if not Path(self.file_path).exists():
                 copyWebdav(self.file_path)
