@@ -1,7 +1,7 @@
 [![Binder](https://binderhub.app.rug.nl/badge_logo.svg)](https://binderhub.app.rug.nl/v2/gh/ArjanOnGithup/Experimental-Skills/HEAD)
 
 
-¡!!!!!!!This project is work in progress. it can not be used for data analysis yet. ¡!!!!!!!
+¡!!!!!!!This project is work in progress. it can not be used for data analysis yet. Breathing and blood pressure data are totally untested/not yet implemented ¡!!!!!!!
 # spectHR - Cardiovascular Spectral Analysis Toolkit
 
 `spectHR` is a Python library designed for interactive analysis of time series data, particularly focused on ECG and breathing patterns. The library provides tools for detecting peaks (R-tops) in ECG data, spectral analysis, and interactive visualization of time series data. It includes various modes for modifying, selecting, and analyzing R-tops and other key events in the data.
