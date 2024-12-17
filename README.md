@@ -177,12 +177,11 @@ In spectHR, Poincaré plots help assess the regularity and variability of the he
 
 Given a sequence of inter-beat intervals (IBI):
 
+```math
+IBI_1, IBI_2, IBI_3, \dots, IBI_n
 
-IBI<sub>1</sub>, IBI<sub>2</sub>, IBI<sub>3</sub>, ..., IBI<sub>n</sub>
-
-and
-
-(IBI<sub>i</sub>, IBI<sub>i+1</sub>)
+(IBI_i, IBI_{i+1})
+```
 
 This creates a scatter plot where the x-axis represents  (current interval) and the y-axis represents  (next interval).
 
@@ -208,9 +207,9 @@ Represents short-term HRV, reflecting beat-to-beat variability.
 
 Formula:
 
-
-SD1 = &#8730<!--<sup>1</sup>/<sub>2</sub>--> Var(IBI<sub>i+1</sub> - IBI<sub>i</sub>)
-
+```math
+SD1 = \sqrt{\frac{1}{2} \text{Var}(IBI_{i+1} - IBI_i)}
+```
 
 2. SD2 (Long-term Variability)
 
