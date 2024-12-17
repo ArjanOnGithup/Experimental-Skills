@@ -50,9 +50,14 @@ class TimeSeries:
 
         Returns:
             TimeSeries: A new TimeSeries object with data between the specified times.
+            or the original series of slicing was not possible
         """
         mask = (self.time >= time_min) & (self.time <= time_max)
-        return TimeSeries(self.time[mask], self.level[mask], self.srate)
+        try:
+            sliced = TimeSeries(self.time[mask], self.level[mask], self.srate)
+        except:
+            sliced = TimeSeries(self.time, self.level, self.srate)
+        return sliced
 
     def to_dataframe(self):
         """
@@ -109,14 +114,13 @@ class SpectHRDataset:
         
         if not self.datadir:
             self.datadir=os.getcwd()
-            logger.info(f'set the datadir to the current wd: {self.datadir}')
             
         if not Path(self.datadir + '\\cache').exists():
             logger.info(f'Creating cache dir: {self.datadir + '\\cache'}')
             os.makedirs(self.datadir + '\\cache')
             
         self.pkl_path = os.path.join(self.datadir + '\\cache', self.pkl_filename)
-        logger.info(f'pkl_name is now {self.pkl_path}')
+
         if use_webdav:
             if not Path(self.file_path).exists():
                 copyWebdav(self.file_path)
@@ -261,7 +265,7 @@ class SpectHRDataset:
             for idx in self.epoch.loc[(self.ecg.time >= start_time) & (self.ecg.time <= end_time)].index:
                 self.epoch.at[idx].append(epoch_name)
                 
-        self.epoch = self.epoch.apply(lambda x: ["None"] if isinstance(x, list) and not x else x)
+        self.epoch = self.epoch.apply(lambda x: [""] if isinstance(x, list) and not x else x)
         self.unique_epochs = self.get_unique_epochs()
 
     def get_unique_epochs(self):
