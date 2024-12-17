@@ -14,6 +14,21 @@
 - **Zoom and Epoch Selection**: Interactively zoom into regions of interest and select epochs for marking.
 - **Spectral Analysis**: Perform cardiovascular spectral analysis to study heart rate variability and other metrics.
 
+## Screenshots
+
+Because everybody likes screenshots:
+
+![preprocessing interface](images/prep.png)
+
+![Poincare Plots](images/poincare.png)
+
+![Example statitstics](images/descriptives.png)
+
+![Frequency domain Plots](images/psd.png)
+
+![Experiment epochs](images/gantt.png)
+
+
 ## Installation
 
 ### Requirements
