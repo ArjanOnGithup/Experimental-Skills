@@ -177,9 +177,11 @@ In spectHR, Poincaré plots help assess the regularity and variability of the he
 
 Given a sequence of inter-beat intervals (IBI):
 
-$`IBI_1, IBI_2, IBI_3, \dots, IBI_n
+```math
+IBI_1, IBI_2, IBI_3, \dots, IBI_n
 
-(IBI_i, IBI_{i+1})`$
+(IBI_i, IBI_{i+1})
+```
 
 This creates a scatter plot where the x-axis represents  (current interval) and the y-axis represents  (next interval).
 
@@ -205,8 +207,9 @@ Represents short-term HRV, reflecting beat-to-beat variability.
 
 Formula:
 
-
-$$ SD1 = \sqrt{\frac{1}{2} \text{Var}(IBI_{i+1} - IBI_i)} $$
+```math
+SD1 = \sqrt{\frac{1}{2} \text{Var}(IBI_{i+1} - IBI_i)}
+```
 
 2. SD2 (Long-term Variability)
 
@@ -217,7 +220,9 @@ Represents long-term HRV, capturing overall variability of the IBIs.
 Formula:
 
 
-$$ SD2 = \sqrt{2 \cdot \text{Var}(IBI_i) - \frac{1}{2} \text{Var}(IBI_{i+1} - IBI_i)} $$
+```math
+SD2 = \sqrt{2 \cdot \text{Var}(IBI_i) - \frac{1}{2} \text{Var}(IBI_{i+1} - IBI_i)}
+```
 
 3. SD1/SD2 Ratio
 
@@ -237,7 +242,9 @@ SD2 corresponds to the length of the ellipse (long axis).
 The area of the ellipse is often calculated as:
 
 
-$$ \text{Area} = \pi \cdot SD1 \cdot SD2 $$
+```math
+\text{Area} = \pi \cdot SD1 \cdot SD2
+```
 
 
 ---
