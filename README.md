@@ -185,23 +185,23 @@ IBI_1, IBI_2, IBI_3, \dots, IBI_n
 
 This creates a scatter plot where the x-axis represents  (current interval) and the y-axis represents  (next interval).
 
-Key Features
+### Key Features
 
-Scatter Visualization: Visualizes the beat-to-beat dynamics of the cardiac rhythm.
+- Scatter Visualization: Visualizes the beat-to-beat dynamics of the cardiac rhythm.
 
-Shape Analysis: The distribution and clustering of points provide insights into autonomic nervous system regulation.
+- Shape Analysis: The distribution and clustering of points provide insights into autonomic nervous system regulation.
 
-Quantitative Measures: Calculates specific parameters describing the spread and organization of points.
+- Quantitative Measures: Calculates specific parameters describing the spread and organization of points.
 
 
 
 ---
 
-Parameters Calculated from Poincaré Plots
+## Parameters Calculated from Poincaré Plots
 
-1. SD1 (Short-term Variability)
+1. SD<sub>1</sub> (Short-term Variability)
 
-SD1 measures the standard deviation of points perpendicular to the line of identity ().
+SD<sub>1</sub> measures the standard deviation of points perpendicular to the line of identity ().
 
 Represents short-term HRV, reflecting beat-to-beat variability.
 
@@ -211,9 +211,9 @@ Formula:
 SD1 = \sqrt{\frac{1}{2} \text{Var}(IBI_{i+1} - IBI_i)}
 ```
 
-2. SD2 (Long-term Variability)
+2. SD<sub>2</sub> (Long-term Variability)
 
-SD2 measures the standard deviation of points along the line of identity ().
+SD<sub>2</sub> measures the standard deviation of points along the line of identity ().
 
 Represents long-term HRV, capturing overall variability of the IBIs.
 
@@ -224,9 +224,9 @@ Formula:
 SD2 = \sqrt{2 \cdot \text{Var}(IBI_i) - \frac{1}{2} \text{Var}(IBI_{i+1} - IBI_i)}
 ```
 
-3. SD1/SD2 Ratio
+3. SD<sub>1</sub>/SD<sub>2</sub> Ratio
 
-The ratio between SD1 and SD2 is used to analyze the balance between short-term and long-term HRV.
+The ratio between SD<sub>1</sub> and SD<sub>2</sub> is used to analyze the balance between short-term and long-term HRV.
 
 Higher ratios indicate more short-term variability, while lower ratios suggest increased long-term patterns.
 
@@ -235,10 +235,10 @@ Higher ratios indicate more short-term variability, while lower ratios suggest i
 
 The Poincaré plot can be approximated by an ellipse centered on the line of identity.
 
-SD1 corresponds to the width of the ellipse (short axis).
+SD<sub>1</sub> corresponds to the width of the ellipse (short axis).
 
 
-SD2 corresponds to the length of the ellipse (long axis).
+SD<sub>2</sub> corresponds to the length of the ellipse (long axis).
 The area of the ellipse is often calculated as:
 
 
@@ -249,7 +249,7 @@ The area of the ellipse is often calculated as:
 
 ---
 
-Interpretation of Poincaré Plots
+### Interpretation of Poincaré Plots
 
 Tight Clustering Around Identity Line: Indicates low HRV and reduced autonomic regulation (e.g., under stress or disease states).
 
@@ -258,7 +258,7 @@ Elliptical Shape with Large Spread: Suggests healthy HRV with dynamic autonomic 
 (x,y) points that are topographically district, are an indication of a mis-trigger of the r-top.
 ---
 
-Example Code
+#### Example Code
 
 Here is how to generate a Poincaré plot and calculate parameters in spectHR:
 
@@ -266,7 +266,7 @@ Here is how to generate a Poincaré plot and calculate parameters in spectHR:
 cs.poincare(DataSet)
 ```
 
-This will display a scatter plot of  vs  and compute SD1, SD2, and SD1/SD2 ratio, along with other descriptive statistics.
+This will display a scatter plot of  vs  and compute SD<sub>1</sub>, SD<sub>2</sub>, and SD<sub>1</sub>/SD<sub>2</sub> ratio, along with other descriptive statistics.
 
 
 By combining both visual and statistical analysis, Poincaré plots in spectHR could offer a powerful tool for understanding heart rate variability and its physiological implications.
