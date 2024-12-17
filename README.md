@@ -199,7 +199,7 @@ This creates a scatter plot where the x-axis represents  (current interval) and 
 
 ## Parameters Calculated from Poincaré Plots
 
-1. SD<sub>1</sub> (Short-term Variability)
+- SD<sub>1</sub> (Short-term Variability)
 
 SD<sub>1</sub> measures the standard deviation of points perpendicular to the line of identity ().
 
@@ -211,7 +211,7 @@ Formula:
 SD1 = \sqrt{\frac{1}{2} \text{Var}(IBI_{i+1} - IBI_i)}
 ```
 
-2. SD<sub>2</sub> (Long-term Variability)
+-  SD<sub>2</sub> (Long-term Variability)
 
 SD<sub>2</sub> measures the standard deviation of points along the line of identity ().
 
@@ -224,14 +224,14 @@ Formula:
 SD2 = \sqrt{2 \cdot \text{Var}(IBI_i) - \frac{1}{2} \text{Var}(IBI_{i+1} - IBI_i)}
 ```
 
-3. SD<sub>1</sub>/SD<sub>2</sub> Ratio
+- SD<sub>1</sub>/SD<sub>2</sub> Ratio
 
 The ratio between SD<sub>1</sub> and SD<sub>2</sub> is used to analyze the balance between short-term and long-term HRV.
 
 Higher ratios indicate more short-term variability, while lower ratios suggest increased long-term patterns.
 
 
-4. Ellipse Fitting
+- Ellipse Fitting
 
 The Poincaré plot can be approximated by an ellipse centered on the line of identity.
 
@@ -245,7 +245,6 @@ The area of the ellipse is often calculated as:
 ```math
 \text{Area} = \pi \cdot SD1 \cdot SD2
 ```
-
 
 ---
 
