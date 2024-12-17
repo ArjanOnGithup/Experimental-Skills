@@ -177,9 +177,9 @@ In spectHR, Poincaré plots help assess the regularity and variability of the he
 
 Given a sequence of inter-beat intervals (IBI):
 
-IBI_1, IBI_2, IBI_3, \dots, IBI_n
+$$ IBI_1, IBI_2, IBI_3, \dots, IBI_n
 
-(IBI_i, IBI_{i+1})
+(IBI_i, IBI_{i+1}) $$
 
 This creates a scatter plot where the x-axis represents  (current interval) and the y-axis represents  (next interval).
 
@@ -206,7 +206,7 @@ Represents short-term HRV, reflecting beat-to-beat variability.
 Formula:
 
 
-SD1 = \sqrt{\frac{1}{2} \text{Var}(IBI_{i+1} - IBI_i)}
+$$ SD1 = \sqrt{\frac{1}{2} \text{Var}(IBI_{i+1} - IBI_i)} $$
 
 2. SD2 (Long-term Variability)
 
@@ -217,14 +217,13 @@ Represents long-term HRV, capturing overall variability of the IBIs.
 Formula:
 
 
-SD2 = \sqrt{2 \cdot \text{Var}(IBI_i) - \frac{1}{2} \text{Var}(IBI_{i+1} - IBI_i)}
+$$ SD2 = \sqrt{2 \cdot \text{Var}(IBI_i) - \frac{1}{2} \text{Var}(IBI_{i+1} - IBI_i)} $$
 
 3. SD1/SD2 Ratio
 
 The ratio between SD1 and SD2 is used to analyze the balance between short-term and long-term HRV.
 
 Higher ratios indicate more short-term variability, while lower ratios suggest increased long-term patterns.
-
 
 
 4. Ellipse Fitting
@@ -238,10 +237,7 @@ SD2 corresponds to the length of the ellipse (long axis).
 The area of the ellipse is often calculated as:
 
 
-
-
-
-\text{Area} = \pi \cdot SD1 \cdot SD2
+$$ \text{Area} = \pi \cdot SD1 \cdot SD2 $$
 
 
 ---
@@ -253,31 +249,21 @@ Tight Clustering Around Identity Line: Indicates low HRV and reduced autonomic r
 Elliptical Shape with Large Spread: Suggests healthy HRV with dynamic autonomic modulation.
 
 (x,y) points that are topographically district, are an indication of a mis-trigger of the r-top.
-
-
-
 ---
 
 Example Code
 
 Here is how to generate a Poincaré plot and calculate parameters in spectHR:
 
-import spectHR as cs
-
-# Example: Generate Poincaré plot for the dataset
-cs.Tools.Params.poincare_plot(DataSet)
+```python
+cs.poincare(DataSet)
+```
 
 This will display a scatter plot of  vs  and compute SD1, SD2, and SD1/SD2 ratio, along with other descriptive statistics.
 
 
----
+By combining both visual and statistical analysis, Poincaré plots in spectHR could offer a powerful tool for understanding heart rate variability and its physiological implications.
 
-By combining both visual and statistical analysis, Poincaré plots in spectHR offer a powerful tool for understanding heart rate variability and its physiological implications.
-
-
----
-
-Does this cover the depth you wanted? Let me know if you'd like more examples or further refinements.
 
 
 ## Contributing
