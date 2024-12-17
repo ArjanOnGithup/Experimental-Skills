@@ -179,7 +179,9 @@ Given a sequence of inter-beat intervals (IBI):
 
 ```math
 IBI_1, IBI_2, IBI_3, \dots, IBI_n
-
+```
+and 
+```math
 (IBI_i, IBI_{i+1})
 ```
 
