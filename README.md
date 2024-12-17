@@ -103,10 +103,14 @@ Usage:
 Affects the boundaries of normal IBIs:
 
 The lower threshold is calculated as:
-`lower = avIBIr - (Nsd * SDavIBIr)`
 
+```math
+lower = avIBIr - (Nsd * SDavIBIr)`
+```
 The upper threshold is:
-`higher = avIBIr + (Nsd * SDavIBIr)`
+```math
+higher = avIBIr + (Nsd * SDavIBIr)`
+```
 
 - Higher values of Nsd result in wider thresholds, reducing sensitivity to variations, while lower values make the classification more sensitive to smaller deviations.
 
