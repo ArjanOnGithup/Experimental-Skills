@@ -251,11 +251,12 @@ The area of the ellipse is often calculated as:
 
 ### Interpretation of Poincaré Plots
 
-Tight Clustering Around Identity Line: Indicates low HRV and reduced autonomic regulation (e.g., under stress or disease states).
+- Tight Clustering Around Identity Line: Indicates low HRV and reduced autonomic regulation (e.g., under stress or disease states).
 
-Elliptical Shape with Large Spread: Suggests healthy HRV with dynamic autonomic modulation.
+- Elliptical Shape with Large Spread: Suggests healthy HRV with dynamic autonomic modulation.
 
-(x,y) points that are topographically district, are an indication of a mis-trigger of the r-top.
+- (x,y) points that are topographically district, are an indication of a mis-trigger of the r-top.
+
 ---
 
 #### Example Code
