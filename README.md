@@ -22,7 +22,7 @@ Because everybody likes screenshots:
 
 ![Poincare Plots](images/poincare.png)
 
-![Example statitstics](images/descriptives.png)
+![Example statistics](images/descriptives.png)
 
 ![Frequency domain Plots](images/psd.png)
 
