@@ -167,6 +167,112 @@ GUI = cs.prepPlot(DataSet)  # Plot ECG with draggable R-top lines
 
 This will allow you to interact with the ECG plot, dragging R-top lines and updating the dataset accordingly.
 
+# Poincaré Plots
+
+Poincaré plots are widely used tools for visualizing and analyzing heart rate variability (HRV) from ECG data. They provide a two-dimensional representation of consecutive inter-beat intervals (IBIs), where each interval is plotted against the subsequent one.
+
+In spectHR, Poincaré plots help assess the regularity and variability of the heart rhythm and provide quantifiable measures that describe short-term and long-term HRV.
+
+## How It Works
+
+Given a sequence of inter-beat intervals (IBI):
+
+```math
+IBI_1, IBI_2, IBI_3, \dots, IBI_n
+
+(IBI_i, IBI_{i+1})
+```
+
+This creates a scatter plot where the x-axis represents  (current interval) and the y-axis represents  (next interval).
+
+Key Features
+
+Scatter Visualization: Visualizes the beat-to-beat dynamics of the cardiac rhythm.
+
+Shape Analysis: The distribution and clustering of points provide insights into autonomic nervous system regulation.
+
+Quantitative Measures: Calculates specific parameters describing the spread and organization of points.
+
+
+
+---
+
+Parameters Calculated from Poincaré Plots
+
+1. SD1 (Short-term Variability)
+
+SD1 measures the standard deviation of points perpendicular to the line of identity ().
+
+Represents short-term HRV, reflecting beat-to-beat variability.
+
+Formula:
+
+```math
+SD1 = \sqrt{\frac{1}{2} \text{Var}(IBI_{i+1} - IBI_i)}
+```
+
+2. SD2 (Long-term Variability)
+
+SD2 measures the standard deviation of points along the line of identity ().
+
+Represents long-term HRV, capturing overall variability of the IBIs.
+
+Formula:
+
+
+```math
+SD2 = \sqrt{2 \cdot \text{Var}(IBI_i) - \frac{1}{2} \text{Var}(IBI_{i+1} - IBI_i)}
+```
+
+3. SD1/SD2 Ratio
+
+The ratio between SD1 and SD2 is used to analyze the balance between short-term and long-term HRV.
+
+Higher ratios indicate more short-term variability, while lower ratios suggest increased long-term patterns.
+
+
+4. Ellipse Fitting
+
+The Poincaré plot can be approximated by an ellipse centered on the line of identity.
+
+SD1 corresponds to the width of the ellipse (short axis).
+
+
+SD2 corresponds to the length of the ellipse (long axis).
+The area of the ellipse is often calculated as:
+
+
+```math
+\text{Area} = \pi \cdot SD1 \cdot SD2
+```
+
+
+---
+
+Interpretation of Poincaré Plots
+
+Tight Clustering Around Identity Line: Indicates low HRV and reduced autonomic regulation (e.g., under stress or disease states).
+
+Elliptical Shape with Large Spread: Suggests healthy HRV with dynamic autonomic modulation.
+
+(x,y) points that are topographically district, are an indication of a mis-trigger of the r-top.
+---
+
+Example Code
+
+Here is how to generate a Poincaré plot and calculate parameters in spectHR:
+
+```python
+cs.poincare(DataSet)
+```
+
+This will display a scatter plot of  vs  and compute SD1, SD2, and SD1/SD2 ratio, along with other descriptive statistics.
+
+
+By combining both visual and statistical analysis, Poincaré plots in spectHR could offer a powerful tool for understanding heart rate variability and its physiological implications.
+
+
+
 ## Contributing
 If you'd like to contribute to spectHR, feel free to fork the repository and submit pull requests. Please ensure that your code follows the existing style and includes appropriate tests.
 
