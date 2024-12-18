@@ -148,18 +148,18 @@ def welch_psd(Dataset, interpolate = True, fs=4, logscale = False):
         
     # VLF fill area (extend to start of LF)
     plt.fill_between(vlf_freqs_ex, 0, vlf_psd_ex,
-                     color='blue', alpha=0.3, label=f'VLF ({vlf_band[0]}-{vlf_band[1]} Hz): {vlf_power:.4f}')
+                     color='blue', alpha=0.3, label=f'VLF ({vlf_band[0]}-{vlf_band[1]} Hz): {vlf_power:.6f}')
     
     # LF fill area (extend to start of HF)
     plt.fill_between(lf_freqs_ex, 0, lf_psd_ex,
-                     color='green', alpha=0.3, label=f'LF ({lf_band[0]}-{lf_band[1]} Hz): {lf_power:.4f}')
+                     color='green', alpha=0.3, label=f'LF ({lf_band[0]}-{lf_band[1]} Hz): {lf_power:.6f}')
     
     # HF fill area (starts at LF's interpolated end)
     plt.fill_between(hf_freqs_ex, 0, hf_psd_ex, 
-                     color='red', alpha=0.3, label=f'HF ({hf_band[0]}-{hf_band[1]} Hz): {hf_power:.4f}')
+                     color='red', alpha=0.3, label=f'HF ({hf_band[0]}-{hf_band[1]} Hz): {hf_power:.6f}')
     
     # LF/HF ratio as a legend entry
-    plt.plot([], [], ' ', label=f'LF/HF Ratio: {lf_hf_ratio:.2f}')
+    plt.plot([], [], ' ', label=f'LF/HF Ratio: {lf_hf_ratio:.3f}')
     
 
     # Add plot labels and title
