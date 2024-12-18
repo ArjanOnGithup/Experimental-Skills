@@ -18,7 +18,7 @@
 
 Because everybody likes screenshots:
 
-![preprocessing interface](images/prep.png)
+![Preprocessing interface](images/prep.png)
 
 ![Poincare Plots](images/poincare.png)
 
