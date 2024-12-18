@@ -1,5 +1,5 @@
 name:
-  - spectHR
+  - SpectHR
 channels:
   - conda-forge
   - anaconda
