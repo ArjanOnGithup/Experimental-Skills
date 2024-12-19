@@ -123,14 +123,14 @@ def poincare(dataset):
     cursor.connect("add", on_hover)
 
     # Step 5: Plot formatting
-    ax.set_title('Poincaré Plot', fontsize=14)
+    ax.set_title('')
     ax.set_xlabel('IBI (ms)', fontsize=12)
     ax.set_ylabel('Next IBI (ms)', fontsize=12)
     ax.axline((0, 0), slope=1, color='gray', linestyle='--', linewidth=0.7)  # Line of identity
     # Filter scatter handles based on the dict_values
     scatters = [handle for label, handle in scatter_handles.items() if dataset.active_epochs[label]]
 
-    ax.legend(handles = scatters, fontsize=5, title=None)
+    ax.legend(handles = scatters, fontsize=9, title=None)
 
     ax.grid(True)
 
@@ -151,7 +151,6 @@ def poincare(dataset):
         Args:
             change: A dictionary containing the checkbox state change information.
         """
-        logger.info('**********')
         epoch = change.owner.label
         visible = change.new
         scatter_handles[epoch].set_visible(visible)
@@ -166,11 +165,11 @@ def poincare(dataset):
         checkbox = v.Checkbox(
             v_model=dataset.active_epochs[epoch],  # Bind checkbox value
             label=epoch,
-            class_='ma-2 pa-2',  # Remove margin and padding
-            style_="font-size: 10px; height: 16px; width: auto;" 
+            class_='ma-0 pa-0', 
+            style_='height: 21px;'
         )
         checkbox.observe(update_visibility, names='v_model')  # Listen for changes to checkbox
         checkboxes[epoch] = checkbox
          
     # Step 8: Return the interactive HBox layout with plot and checkboxes
-    return HBox([plot_output, v.Container(children=list(checkboxes.values()),style_="width: auto; min-width: 350px; margin: 0px;")])
+    return HBox([plot_output, v.Container(children=list(checkboxes.values()), style_="width: auto; min-width: 150px; margin: 0px;")])
