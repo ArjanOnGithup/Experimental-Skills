@@ -6,10 +6,10 @@
 
 # spectHR - Cardiovascular Spectral Analysis Toolkit
 
-`spectHR` is a Python library designed for interactive analysis of time series data, particularly focused on ECG and breathing patterns. The library provides tools for detecting peaks (Ru-tops) in ECG data, spectral analysis, and interactive visualization of time series data. It includes various modes for modifying, selecting, and analyzing R-tops and other key events in the data.
+`spectHR` is a Python library designed for interactive analysis of time series data, particularly focused on ECG and breathing patterns. The library provides tools for detecting peaks (R-tops) in ECG data, spectral analysis, and interactive visualization of time series data. It includes various modes for modifying, selecting, and analyzing R-tops and other key events in the data.
 
 ## Features
-- It reads labstreaminglayers .XDF files. the ECG stream is detected if its label contains 'polar'. Generally for use with the 
+- It reads labstreaminglayers .XDF files. the ECG stream is detected if its label contains 'polar'. Generally for use with the PolarBand H10 and the
 ![PolarGUI](https://github.com/markspan/PolarBand2lsl) application. Markers are ready from a seperate stream, and should follow the patterns `start label` and `end label` to mark an epoch (named 'label').
 - **ECG and Breathing Pattern Analysis**: Process and analyze time series data, including ECG and breathing patterns.
 - **Peak Detection (R-tops)**: Automatically detect R-top times in ECG signals.
