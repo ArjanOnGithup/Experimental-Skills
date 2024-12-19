@@ -228,7 +228,7 @@ class SpectHRDataset:
     def create_epoch_series(self):
         """
         Creates an 'epoch' series within the dataset to map each time point in the ECG
-        to a corresponding epoch based on event labels ('start' and 'end').
+        to a corresponding epoch(s) based on event labels ('start' and 'end').
     
         Returns:
             pd.Series: A series with epoch labels (lists) for each time index in the ECG and RTopTimes.
@@ -274,6 +274,7 @@ class SpectHRDataset:
         """        # Flatten all lists into one and find unique values
         all_epochs = [epoch for sublist in self.epoch.dropna() for epoch in sublist]
         unique_epochs = set(all_epochs)
+        unique_epochs.discard("")
         return unique_epochs
         
     def log_action(self, action_name, params):

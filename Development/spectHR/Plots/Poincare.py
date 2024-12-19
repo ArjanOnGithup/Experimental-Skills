@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import mplcursors
 import copy
+import ipyvuetify as v
 from matplotlib.patches import Ellipse
 from ipywidgets import HBox, VBox, Checkbox, Output, Layout
 from spectHR.Tools.Params import *
@@ -150,7 +151,8 @@ def poincare(dataset):
         Args:
             change: A dictionary containing the checkbox state change information.
         """
-        epoch = change.owner.description
+        logger.info('**********')
+        epoch = change.owner.label
         visible = change.new
         scatter_handles[epoch].set_visible(visible)
         ellipse_handles[epoch].set_visible(visible)
@@ -159,15 +161,16 @@ def poincare(dataset):
         with plot_output:
             fig.canvas.draw_idle()
 
-    # Create a checkbox for each epoch
-    for epoch in sorted(unique_epochs):
-        checkbox = Checkbox(
-            value=dataset.active_epochs[epoch],
-            description=epoch,
-            layout=checkbox_layout
-        )
-        checkbox.observe(update_visibility, names='value')
-        checkboxes[epoch] = checkbox
 
+    for epoch in sorted(unique_epochs):
+        checkbox = v.Checkbox(
+            v_model=dataset.active_epochs[epoch],  # Bind checkbox value
+            label=epoch,
+            class_='ma-2 pa-2',  # Remove margin and padding
+            style_="font-size: 10px; height: 16px; width: auto;" 
+        )
+        checkbox.observe(update_visibility, names='v_model')  # Listen for changes to checkbox
+        checkboxes[epoch] = checkbox
+         
     # Step 8: Return the interactive HBox layout with plot and checkboxes
-    return HBox([plot_output, VBox(list(checkboxes.values())[::-1], layout=vbox_layout)])
+    return HBox([plot_output, v.Container(children=list(checkboxes.values()),style_="width: auto; min-width: 350px; margin: 0px;")])

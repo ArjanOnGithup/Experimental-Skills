@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.signal import welch
 from scipy.interpolate import interp1d
 
-def welch_psd(Dataset, interpolate = True, fs=4, logscale = False):
+def welch_psd(Dataset, interpolate = True, fs=4, logscale = False,  nperseg=256, noverlap=128, interp_kind = 'linear', window='hamming'):
     """
     Analyzes the frequency domain of an Inter-Beat Interval (IBI) series using Welch's PSD method
     and visualizes the spectral power in VLF, LF, and HF bands.
@@ -14,19 +14,25 @@ def welch_psd(Dataset, interpolate = True, fs=4, logscale = False):
     VLF (0.003–0.04 Hz), LF (0.04–0.15 Hz), and HF (0.15–0.4 Hz). The results are plotted, highlighting
     these bands in different colors, and key measures are labeled on the plot.
 
+    An alternative to this approuch would be the use of the  Lomb-Scargle periodogram:
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.lombscargle.html#scipy.signal.lombscargle
+
     Parameters:
     -----------
-    Dataset: SpectHRDataset containing:
-    ibi_times : array-like
-        Timestamps of the IBIs (in seconds), typically derived from the R-peak times of an ECG.
-    ibi_values : array-like
-        Inter-Beat Interval values (in seconds), i.e., the time between successive heartbeats.
+    Dataset: SpectHRDataset.RTops dataframe containing:
+        ibi_times : array-like
+            Timestamps of the IBIs (in seconds), typically derived from the R-peak times of an ECG.
+        ibi_values : array-like
+            Inter-Beat Interval values (in seconds), i.e., the time between successive heartbeats.
+            
     interpolate : Boolean, optional
         Does the ibi range need to be resampled. This is advised for the welch method.
         Default: True
+        
     fs : int, optional
         Resampling frequency in Hz (default: 4 Hz). This should be at least 2x the HF upper limit (0.4 Hz)
         to satisfy the Nyquist criterion and ensure accurate PSD estimation.
+        
     logscale: plot the y-axis on a log scale, defaults to False
 
     Returns:
@@ -52,8 +58,11 @@ def welch_psd(Dataset, interpolate = True, fs=4, logscale = False):
     - Interpolation ensures uniform sampling, which is a requirement for Fourier-based methods like Welch.
     - The LF/HF ratio is commonly used to assess autonomic nervous system regulation.
     """
+    
     ibi_times = Dataset['time']
     ibi_values= Dataset['ibi']
+    
+    # Hack to get the epoch name if called through groupby.apply
     try:
         titlestring = Dataset['epoch'].iloc[0].title()
     except AttributeError:
@@ -64,19 +73,23 @@ def welch_psd(Dataset, interpolate = True, fs=4, logscale = False):
     time_uniform = np.arange(ibi_times.iloc[0], ibi_times.iloc[-1], 1/fs)  # Regular time grid at fs Hz
     if (interpolate):
         # Linear interpolation of IBI values to match the uniform grid
-        interp_func = interp1d(ibi_times, ibi_values, kind='linear', fill_value='extrapolate')
+        interp_func = interp1d(ibi_times, ibi_values, kind=interp_kind, fill_value='extrapolate')
         ibi_resampled = interp_func(time_uniform)
     else:
         ibi_resampled = ibi_values
+        
     # 2. Compute the Power Spectral Density (PSD) using Welch's method
     # Welch's method parameters:
     # - nperseg: Segment size (256 samples at fs=4 Hz -> 64-second segments)
     # - noverlap: 50% overlap between segments (128 samples)
     # - window: Hamming window to minimize spectral leakage
+    # if a ValueError occurs (usually the epoch is too small for a calculation using the default 
+    # parameters) the function returns empty. This will lead to the wanted 'NaN'values in the descriptives
     try:
-        freqs, psd = welch(ibi_resampled, fs=fs, nperseg=256, noverlap=128, window='hamming')
+        freqs, psd = welch(ibi_resampled, fs=fs, nperseg=nperseg, noverlap=noverlap, window=window)
     except ValueError:
         return
+        
     # 3. Define frequency bands of interest for HRV analysis
     vlf_band = (0.003, 0.04)  # Very Low Frequency (VLF)
     lf_band = (0.04, 0.15)    # Low Frequency (LF)
@@ -112,6 +125,9 @@ def welch_psd(Dataset, interpolate = True, fs=4, logscale = False):
         'LF/HF Ratio': lf_hf_ratio
     }
     
+    """
+    6: The blocks below are there only to get the areas filled upto the actual band boundaries
+    """
     # Extract PSD values for each band
     vlf_psd = psd[(freqs >= vlf_band[0]) & (freqs <= vlf_band[1])]
     lf_psd = psd[(freqs >= lf_band[0]) & (freqs <= lf_band[1])]
@@ -142,9 +158,9 @@ def welch_psd(Dataset, interpolate = True, fs=4, logscale = False):
     hf_freqs_ex = np.insert(hf_freqs, 0, lf_band[1])  # Add exact lf_band[1]
     hf_freqs_ex = np.append(hf_freqs_ex, hf_band[1])  # Add exact hf_band[1]
     
-    # 6. Create a graphical representation of the PSD with highlighted bands
+    # 7. Create a graphical representation of the PSD with highlighted bands
     plt.figure(figsize=(10, 6))
-    plt.plot(freqs, psd, 'o-', alpha = .5, linewidth=1.5, label=f'PSD Spectrum {titlestring}')
+    plt.plot(freqs, psd, 'o-', alpha = .5, linewidth=.5, label=f'PSD Spectrum {titlestring}')
         
     # VLF fill area (extend to start of LF)
     plt.fill_between(vlf_freqs_ex, 0, vlf_psd_ex,
@@ -167,6 +183,7 @@ def welch_psd(Dataset, interpolate = True, fs=4, logscale = False):
     plt.xlabel('Frequency (Hz)', fontsize=12)
     plt.ylabel('Power Spectral Density (s²/Hz)', fontsize=12)
     plt.legend(loc='upper right')
+    
     # Ensure the axes starts at 0
     plt.xlim(left = 0,  right = .5)
     plt.ylim(bottom = 0)
