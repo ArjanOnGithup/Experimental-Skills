@@ -18,7 +18,7 @@ import pandas as pd
 
 def prepPlot(data, x_min=None, x_max=None, plot_poincare=False):
     """
-    Plot the heart rate data with interactive features for zooming,
+    Plot and preprocess the ibi data with interactive features for zooming,
     dragging lines, and selecting modes for adding, removing, or finding R-top times.
 
     Parameters:
