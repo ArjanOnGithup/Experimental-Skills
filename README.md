@@ -2,7 +2,7 @@
 
 ---
 ```
-This project is work in progress. it can not be used for data analysis yet. Breathing and blood pressure data are totally untested/not yet implemented
+This project is work in progress. It can not be used for data analysis yet. Breathing and blood pressure data are totally untested/not yet implemented
 ```
 ---
 # spectHR - Cardiovascular Spectral Analysis Toolkit
