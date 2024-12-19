@@ -1,7 +1,7 @@
 [![Binder](https://binderhub.app.rug.nl/badge_logo.svg)](https://binderhub.app.rug.nl/v2/gh/ArjanOnGithup/Experimental-Skills/HEAD)
 
-<div style="border-left: 4px solid #FFA500; background-color: #FFF3CD; padding: 10px; border-radius: 5px; margin: 10px 0;">
-<strong>⚠️ CAUTION:</strong>This project is work in progress. It can not be used for data analysis yet. Breathing and blood pressure data are totally untested/not yet implemented.</div>
+> **⚠️ CAUTION:**  
+> This project is work in progress. It can not be used for data analysis yet. Breathing and blood pressure data are totally untested/not yet implemented.
 
 
 # spectHR - Cardiovascular Spectral Analysis Toolkit
