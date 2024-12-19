@@ -161,7 +161,7 @@ def poincare(dataset):
             fig.canvas.draw_idle()
 
 
-    for epoch in sorted(unique_epochs):
+    for epoch in sorted(unique_epochs, key=lambda v: v.upper()):
         checkbox = v.Checkbox(
             v_model=dataset.active_epochs[epoch],  # Bind checkbox value
             label=epoch,

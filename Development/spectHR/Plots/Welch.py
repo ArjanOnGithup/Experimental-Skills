@@ -159,7 +159,7 @@ def welch_psd(Dataset, interpolate = True, fs=4, logscale = False,  nperseg=256,
     hf_freqs_ex = np.append(hf_freqs_ex, hf_band[1])  # Add exact hf_band[1]
     
     # 7. Create a graphical representation of the PSD with highlighted bands
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(7.5, 5))
     plt.plot(freqs, psd, 'o-', alpha = .5, linewidth=.5, label=f'PSD Spectrum {titlestring}')
         
     # VLF fill area (extend to start of LF)
