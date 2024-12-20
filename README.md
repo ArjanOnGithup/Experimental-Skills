@@ -9,7 +9,7 @@ This project is mainly the introduction of an library. The idea is that library 
 
 ## Overview
 
-The **HRApp** is an interactive tool designed to assist in the analysis of heart rate variability (HRV) data. Built with Python and leveraging the power of **ipywidgets**, it provides a graphical user interface (GUI) within Jupyter Notebooks to explore, preprocess, and visualize HRV data. The app organizes its features into multiple tabs, each focusing on a specific aspect of HRV analysis.
+The **HRApp** is an interactive tool designed to assist in the analysis of heart rate variability (HRV) data. It provides a graphical user interface (GUI) within Jupyter Notebooks to explore, preprocess, and visualize HRV data. The app organizes its features into multiple tabs, each focusing on a specific aspect of HRV analysis.
 
 ## Features
 
