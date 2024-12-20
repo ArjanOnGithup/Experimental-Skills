@@ -3,19 +3,91 @@
 > **⚠️ CAUTION:**  
 > <p style="color: red;">This project is work in progress. It can not be used for data analysis yet. Breathing and blood pressure data are totally untested/not yet implemented.</p>
 
+This project is mainly the introduction of an library. The idea is that library can be used without knowledge of `python` by using the App.
 
-# spectHR - Cardiovascular Spectral Analysis Toolkit
+# HRApp: An Interactive Heart Rate Variability (HRV) Analysis Tool
 
-`spectHR` is a Python library designed for interactive analysis of time series data, particularly focused on ECG and breathing patterns. The library provides tools for detecting peaks (R-tops) in ECG data, spectral analysis, and interactive visualization of time series data. It includes various modes for modifying, selecting, and analyzing R-tops and other key events in the data.
+## Overview
+
+The **HRApp** is an interactive tool designed to assist in the analysis of heart rate variability (HRV) data. Built with Python and leveraging the power of **ipywidgets**, it provides a graphical user interface (GUI) within Jupyter Notebooks to explore, preprocess, and visualize HRV data. The app organizes its features into multiple tabs, each focusing on a specific aspect of HRV analysis.
 
 ## Features
-- **Reads XDF**: It reads [labstreaminglayers](https://github.com/sccn/labstreaminglayer) .XDF files. the ECG stream is detected if its label contains 'polar'. Generally for use with the PolarBand H10 and the
-[PolarGUI](https://github.com/markspan/PolarBand2lsl) application. Markers are ready from a seperate stream, and should follow the patterns `start label` and `end label` to mark an epoch (named 'label').
-- **ECG and Breathing Pattern Analysis**: Process and analyze time series data, including ECG and breathing patterns.
-- **Peak Detection (R-tops)**: Automatically detect R-top times in ECG signals.
-- **Interactive Plotting**: Use draggable vertical lines to visualize and manipulate R-tops within a plot.
-- **Zoom and Epoch Selection**: Interactively zoom into regions of interest and select epochs for marking.
-- **Spectral Analysis**: Perform cardiovascular spectral analysis to study heart rate variability and other metrics.
+
+1. **PreProcessing Tab**  
+   - Provides tools to preprocess HRV data, such as cleaning and inspecting inter-beat intervals (IBI).
+   - Displays a customizable GUI for manipulating the dataset.
+
+2. **Poincare Tab**  
+   - Visualizes HRV data using Poincaré plots, which highlight the relationships between successive IBIs.
+   - Ideal for assessing nonlinear dynamics in heart rate data.
+
+3. **Descriptives Tab**  
+   - Computes detailed descriptive statistics for IBIs, grouped by epochs.
+   - Includes metrics such as mean, standard deviation, RMSSD, SDNN, SD1, SD2, and others.
+   - Integrates power spectral density (PSD) results into the statistics, if available.
+
+4. **PSD Tab**  
+   - Uses Welch's method to compute power spectral density (PSD) for HRV data.
+   - Groups PSD results by epochs, providing insights into the frequency domain features of HRV.
+
+5. **Epochs Tab**  
+   - Visualizes epochs of HRV data using a Gantt chart.
+   - Offers a clear representation of time-based data segmentation.
+
+## How It Works
+
+### Inputs
+- **Dataset**: The app requires a dataset containing HRV-related data, such as IBIs, epochs, and other time-series information. This dataset is expected to support operations defined in the `spectHR` library.
+
+### Workflow
+1. **Launch the App**  
+   Call the `HRApp(DataSet)` function with the appropriate dataset as input. This displays the GUI with five tabs.
+   
+2. **Switch Between Tabs**  
+   Navigate through tabs to explore different aspects of HRV analysis. The selected tab dynamically updates its content:
+   - Preprocessing tools in the **PreProcessing** tab.
+   - Poincaré plot in the **Poincare** tab.
+   - Statistical summaries in the **Descriptives** tab.
+   - PSD analysis in the **PSD** tab.
+   - Epoch visualizations in the **Epochs** tab.
+
+3. **Real-Time Updates**  
+   The app dynamically updates visualizations and calculations as you interact with each tab. Outputs are recalculated and displayed in real-time.
+
+4. **Data Saving**  
+   Changes to the dataset, such as computed statistics or PSD values, are saved automatically.
+
+### Outputs
+- Visualizations (e.g., plots, charts) for exploring HRV dynamics.
+- Computed metrics and summaries for HRV data.
+- Processed datasets ready for further analysis.
+
+## Dependencies
+
+- **Python Libraries**:  
+  - `ipywidgets`: For interactive UI elements.
+  - `spectHR`: Custom library for HRV preprocessing and analysis.
+  - `pyhrv`: For HRV metrics calculation.
+  - `pandas`: For data manipulation and statistics.
+
+- **Environment**:  
+  - Jupyter Notebook or JupyterLab (preferred) for running and displaying the app.
+
+## Example Usage
+
+```python
+import spectHR as cs
+%matplotlib widget
+
+DataSet = cs.SpectHRDataset("SUB_005.xdf", use_webdav=True, reset = False)
+DataSet = cs.borderData(DataSet)
+DataSet = cs.filterECGData(DataSet, {"filterType": "highpass", "cutoff": .50})
+if not hasattr(DataSet, 'RTops'):
+    DataSet = cs.calcPeaks(DataSet)
+
+# Launch the HRV analysis application
+App = cs.HRApp(DataSet)
+```
 
 ## Screenshots
 
@@ -30,6 +102,24 @@ Because everybody likes screenshots:
 ![Frequency domain Plots](images/psd.png)
 
 ![Experiment epochs](images/gantt.png)
+
+---
+
+This tool is ideal for researchers, clinicians, and students who work with HRV data and require an interactive, user-friendly interface for their analyses.
+
+# spectHR - Cardiovascular Spectral Analysis Toolkit
+
+`spectHR` is a Python library designed for interactive analysis of time series data, particularly focused on ECG and breathing patterns. The library provides tools for detecting peaks (R-tops) in ECG data, spectral analysis, and interactive visualization of time series data. It includes various modes for modifying, selecting, and analyzing R-tops and other key events in the data.
+
+## Features
+- **Reads XDF**: It reads [labstreaminglayers](https://github.com/sccn/labstreaminglayer) .XDF files. the ECG stream is detected if its label contains 'polar'. Generally for use with the PolarBand H10 and the
+[PolarGUI](https://github.com/markspan/PolarBand2lsl) application. Markers are ready from a seperate stream, and should follow the patterns `start label` and `end label` to mark an epoch (named 'label').
+- **ECG and Breathing Pattern Analysis**: Process and analyze time series data, including ECG and breathing patterns.
+- **Peak Detection (R-tops)**: Automatically detect R-top times in ECG signals.
+- **Interactive Plotting**: Use draggable vertical lines to visualize and manipulate R-tops within a plot.
+- **Zoom and Epoch Selection**: Interactively zoom into regions of interest and select epochs for marking.
+- **Spectral Analysis**: Perform cardiovascular spectral analysis to study heart rate variability and other metrics.
+
 
 
 ## Installation

@@ -11,5 +11,5 @@ from spectHR.Tools.Explode import explode
 
 from spectHR.DataSet.SpectHRDataset import SpectHRDataset, TimeSeries
 from spectHR.Actions.csActions import *
-
+from spectHR.App.spectHRApp import HRApp
 from spectHR.Tools.Params import *

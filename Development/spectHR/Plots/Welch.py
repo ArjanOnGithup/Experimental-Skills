@@ -85,8 +85,10 @@ def welch_psd(Dataset, interpolate = True, fs=4, logscale = False,  nperseg=256,
     # - window: Hamming window to minimize spectral leakage
     # if a ValueError occurs (usually the epoch is too small for a calculation using the default 
     # parameters) the function returns empty. This will lead to the wanted 'NaN'values in the descriptives
+    ibi_resampled = ibi_resampled-np.mean(ibi_resampled)
+    
     try:
-        freqs, psd = welch(ibi_resampled, fs=fs, nperseg=nperseg, noverlap=noverlap, window=window)
+        freqs, psd = welch(ibi_resampled, fs=fs, scaling='density', nfft=2**12, nperseg=nperseg, noverlap=noverlap, window=window)
     except ValueError:
         return
         
@@ -160,7 +162,7 @@ def welch_psd(Dataset, interpolate = True, fs=4, logscale = False,  nperseg=256,
     
     # 7. Create a graphical representation of the PSD with highlighted bands
     plt.figure(figsize=(7.5, 5))
-    plt.plot(freqs, psd, 'o-', alpha = .5, linewidth=.5, label=f'PSD Spectrum {titlestring}')
+    plt.plot(freqs, psd, '-', alpha = .5, linewidth=.5, label=f'PSD Spectrum {titlestring}')
         
     # VLF fill area (extend to start of LF)
     plt.fill_between(vlf_freqs_ex, 0, vlf_psd_ex,
@@ -180,12 +182,12 @@ def welch_psd(Dataset, interpolate = True, fs=4, logscale = False,  nperseg=256,
 
     # Add plot labels and title
     plt.title('Power Spectral Density of IBI Series', fontsize=14)
-    plt.xlabel('Frequency (Hz)', fontsize=12)
-    plt.ylabel('Power Spectral Density (s²/Hz)', fontsize=12)
+    plt.xlabel('Frequency [$Hz$]', fontsize=12)
+    plt.ylabel('PSD [$s^2/Hz$]', fontsize=12)
     plt.legend(loc='upper right')
     
     # Ensure the axes starts at 0
-    plt.xlim(left = 0,  right = .5)
+    plt.xlim(left = 0,  right = .6)
     plt.ylim(bottom = 0)
     
     if logscale:
