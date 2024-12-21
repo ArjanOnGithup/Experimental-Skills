@@ -65,6 +65,7 @@ The **HRApp** is an interactive tool designed to assist in the analysis of heart
 ## Dependencies
 
 - **Python Libraries**:  
+  - `pyxdf`: For reading .XDF files.
   - `ipywidgets`: For interactive UI elements.
   - `spectHR`: Custom library for HRV preprocessing and analysis.
   - `pyhrv`: For HRV metrics calculation.
