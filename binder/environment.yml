@@ -1,5 +1,5 @@
 name:
-  - SpectHR
+  - spectHR
 channels:
   - conda-forge
   - anaconda
@@ -24,7 +24,6 @@ dependencies:
   - scipy
   - voila
   - voila-gridstack
-  - seaborn
   - pip:
     - pyhrv
     - easywebdav
