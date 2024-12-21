@@ -19,11 +19,12 @@ dependencies:
   - numpy
   - pandas
   - pip
-  - python=3.12
+  - python
   - pyxdf  
   - scipy
   - voila
   - voila-gridstack
+  - seaborn
   - pip:
     - pyhrv
     - easywebdav
