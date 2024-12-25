@@ -3,7 +3,7 @@
 > **⚠️ CAUTION:**  
 > <p style="color: red;">This project is work in progress. It can not be used for data analysis yet. Breathing and blood pressure data are totally untested/not yet implemented.</p>
 
-This project is mainly the introduction of a library. The idea is that library can be used without knowledge of `python` by using the App.
+This project is mainly the introduction of a library. The idea is that library can be used without knowledge of `python` by using the App. The App runs primarily in Jupyter.
 
 # HRApp: An Interactive Heart Rate Variability (HRV) Analysis Tool
 
