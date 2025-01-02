@@ -211,11 +211,11 @@ Affects the boundaries of normal IBIs:
 The lower threshold is calculated as:
 
 ```math
-lower = avIBIr - (Nsd * SDavIBIr)`
+lower = avIBIr - (Nsd * SD(avIBI)r)`
 ```
 The upper threshold is:
 ```math
-higher = avIBIr + (Nsd * SDavIBIr)`
+higher = avIBIr + (Nsd * SD(avIBI)r)`
 ```
 
 Higher values of Nsd result in wider thresholds, reducing sensitivity to variations, while lower values make the classification more sensitive to smaller deviations.
