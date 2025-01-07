@@ -3,7 +3,7 @@
 > **⚠️ CAUTION:**  
 > <p style="color: red;">This project is work in progress. It can not be used for data analysis yet. Breathing and blood pressure data are totally untested/not yet implemented.</p>
 
-This project is mainly the introduction of a library. The idea is that library can be used without knowledge of `python` by using the App.
+This project is mainly the introduction of a library. The idea is that library can be used without knowledge of `python` by using the App. The App runs primarily in Jupyter.
 
 # HRApp: An Interactive Heart Rate Variability (HRV) Analysis Tool
 
@@ -211,11 +211,11 @@ Affects the boundaries of normal IBIs:
 The lower threshold is calculated as:
 
 ```math
-lower = avIBIr - (Nsd * SDavIBIr)`
+lower = avIBIr - (Nsd * SD(avIBI)r)`
 ```
 The upper threshold is:
 ```math
-higher = avIBIr + (Nsd * SDavIBIr)`
+higher = avIBIr + (Nsd * SD(avIBI)r)`
 ```
 
 Higher values of Nsd result in wider thresholds, reducing sensitivity to variations, while lower values make the classification more sensitive to smaller deviations.
