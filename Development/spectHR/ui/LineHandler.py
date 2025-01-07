@@ -8,10 +8,11 @@ class DraggableVLine:
     
     Attributes:
         line (matplotlib.lines.Line2D): The line object representing the vertical line.
-        callback_drag (callable): Function to call when the line is dragged.
     """
     active_line = None  # Shared among all instances
     mode = 'Drag'
+    line = None
+    
     def __init__(self, ax, x_position, callback_drag=None, callback_remove=None, color = 'red'):
         """
         Initializes DraggableVLine at a specified x position.
@@ -149,10 +150,16 @@ class LineHandler:
                 self.callback_remove(line)
     
     def clear(self):
-        for  line in self.draggable_lines:
-            line.line.remove()
-        self.draggable_lines.clear()
-    
+        """
+        Removes all draggable lines from the Axes and clears the `draggable_lines` list.
+        """
+        for draggable_line in self.draggable_lines:
+            line = draggable_line.line
+            if line.axes:  # Check if the line is still associated with an Axes
+                line.remove()  # Remove the line from the plot
+        self.draggable_lines.clear()  # Clear the internal list of draggable lines
+        plt.draw()  # Redraw the canvas
+   
     def update_mode(self, mode):
         logger.info(f'Changed mode to {mode}')
         DraggableVLine.mode = mode
