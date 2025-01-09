@@ -120,6 +120,7 @@ def poincare(dataset):
 
         # Update the annotation text with epoch and time information
         sel.annotation.set_text(f"{epochs[global_idx]}\nTime: {round(times[global_idx], 2)}")
+        
     cursor.connect("add", on_hover)
 
     # Step 5: Plot formatting

@@ -94,12 +94,20 @@ def gantt(dataset, labels=True):
         for i, row in epochs_gantt.iterrows():
             # Annotate start time
             ax.text(
+<<<<<<< Updated upstream
                 row["start"], i, f"{round(row['start'])}", 
+=======
+                row["start"]+3, i, f"{round(row['start'])}", 
+>>>>>>> Stashed changes
                 va="center", ha="left", fontsize=8, rotation='vertical'
             )
             # Annotate end time
             ax.text(
+<<<<<<< Updated upstream
                 row["end"], i, f"{round(row['end'])}", 
+=======
+                row["end"]-1, i, f"{round(row['end'])}", 
+>>>>>>> Stashed changes
                 va="center", ha="right", fontsize=8, rotation='vertical'
             )
     

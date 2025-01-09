@@ -75,12 +75,65 @@ def HRApp(DataSet):
             A dictionary containing information about the change event. The key 'new' indicates
             the index of the newly selected tab.
         """
+<<<<<<< Updated upstream
         tab_index = change['new']
         
         if tab_index == 1:  # Poincare tab selected
             with poincarePlot:
                 poincarePlot.clear_output()  # Clear previous content
                 display(cs.poincare(DataSet))  # Display Poincare plot for the dataset
+=======
+        if change['name'] == 'selected_index':        
+            if change['new'] == 1:  # Poincare tab selected
+                with poincarePlot:
+                    poincarePlot.clear_output()  # Clear previous content
+                    display(cs.poincare(DataSet))  # Display Poincare plot for the dataset
+                
+            if change['new'] == 2:  # Descriptives tab selected
+                with descriptives:
+                    descriptives.clear_output()  # Clear previous content
+                    
+                    # Compute descriptive statistics grouped by epoch
+                    DataSet.descriptives_Values = cs.explode(DataSet)\
+                        .groupby('epoch')['ibi']\
+                        .agg([\
+                            ('N', len),\
+                            ('mean', 'mean'),\
+                            ('std', 'std'),\
+                            ('min', 'min'),\
+                            ('max', 'max'),\
+                            ('rmssd', lambda x: pyhrv.time_domain.rmssd(x)[0]), \
+                            ('sdnn', lambda x: pyhrv.time_domain.sdnn(x)[0]),\
+                            ('sdsd', cs.Tools.Params.sdsd),\
+                            ('sd1', cs.Tools.Params.sd1),\
+                            ('sd2', cs.Tools.Params.sd2),\
+                            ('sd_ratio', cs.Tools.Params.sd_ratio),\
+                            ('ellipse_area', cs.ellipse_area)\
+                        ])
+                    
+                    # Merge PSD values if available
+                    if hasattr(DataSet, 'psd_Values'):
+                        df = pd.DataFrame(list(DataSet.psd_Values.dropna()))
+                        df['epoch'] = DataSet.psd_Values.dropna().index
+                        pd.set_option('display.precision', 8)  # Set display precision for DataFrame
+                        DataSet.descriptives_Values = pd.merge(DataSet.descriptives_Values, df, on='epoch', how='outer')
+                    
+                    display(DataSet.descriptives_Values)  # Display the computed statistics
+                    
+            if change['new'] == 3:  # PSD tab selected
+                with psdPlot:
+                    psdPlot.clear_output()  # Clear previous content
+                    
+                    # Compute PSD values using Welch's method
+                    Data = cs.explode(DataSet)
+                    DataSet.psd_Values = Data.groupby('epoch')[Data.columns.tolist()]\
+                                             .apply(cs.welch_psd, nperseg=256, noverlap=128)
+                    
+            if change['new'] == 4:  # Gantt tab selected
+                with Gantt:
+                    Gantt.clear_output()  # Clear previous content
+                    display(cs.gantt(DataSet))  # Display Gantt chart visualization
+>>>>>>> Stashed changes
             
         if tab_index == 2:  # Descriptives tab selected
             with descriptives:

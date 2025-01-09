@@ -191,7 +191,7 @@ class SpectHRDataset:
             ecg_levels = pd.Series(rawdata[ecg_index]["time_series"].flatten())
             ecg_timestamps -= self.starttime
             # pragmatic apprauch. Might do better. This flips the signal if it thinks it needs to...
-            if abs(np.mean(ecg_levels) - np.min(ecg_levels)) > abs(np.mean(ecg_levels) - np.max(ecg_levels)): 
+            if abs(np.mean(ecg_levels) - np.min(ecg_levels)) > (1.1* abs(np.mean(ecg_levels) - np.max(ecg_levels))): 
                 logger.info('flipping the signal')
                 ecg_levels = -ecg_levels
             self.ecg = TimeSeries(ecg_timestamps, ecg_levels)
