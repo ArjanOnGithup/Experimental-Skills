@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.signal import welch
 from scipy.interpolate import interp1d
+from spectHR.Tools.Logger import logger
 
 def welch_psd(Dataset, interpolate = True, fs=4, logscale = False,  nperseg=256, noverlap=128, interp_kind = 'linear', window='hamming'):
     """

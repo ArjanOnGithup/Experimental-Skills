@@ -127,8 +127,8 @@ def HRApp(DataSet):
                 Gantt.clear_output()  # Clear previous content
                 display(cs.gantt(DataSet, labels=True))  # Display Gantt chart visualization
         
-    # Save changes to the dataset after any tab interaction
-    DataSet.save()
+        # Save changes to the dataset after any tab interaction
+        DataSet.save()
     
     # Attach the tab change observer to the Tab widget
     App.observe(on_tab_change, 'v_model')
