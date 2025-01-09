@@ -3,7 +3,7 @@ import numpy as np
 import copy
 from spectHR.Tools.Logger import logger
 
-def gantt(dataset, labels=False):
+def gantt(dataset, labels=True):
     """
     Generates a Gantt chart from the provided dataset, visualizing the duration and time range
     of active epochs. Optionally annotates the start and end times on the chart.
@@ -95,12 +95,12 @@ def gantt(dataset, labels=False):
             # Annotate start time
             ax.text(
                 row["start"], i, f"{round(row['start'])}", 
-                va="center", ha="right", fontsize=8
+                va="center", ha="left", fontsize=8, rotation='vertical'
             )
             # Annotate end time
             ax.text(
                 row["end"], i, f"{round(row['end'])}", 
-                va="center", ha="left", fontsize=8
+                va="center", ha="right", fontsize=8, rotation='vertical'
             )
     
     # Adjust layout to avoid clipping
