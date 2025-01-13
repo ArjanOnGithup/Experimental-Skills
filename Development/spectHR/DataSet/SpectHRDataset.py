@@ -224,6 +224,10 @@ class SpectHRDataset:
                 'label': event_labels
             })
             self.create_epoch_series()
+            
+    def log_error(message):
+        logger.error(message)
+
 
     def create_epoch_series(self):
         """
@@ -234,7 +238,7 @@ class SpectHRDataset:
             pd.Series: A series with epoch labels (lists) for each time index in the ECG and RTopTimes.
         """
         if self.events is None:
-            logger.error('No events available for epoch generation')
+            self.log_error('No events available for epoch generation')
             return
     
         # Initialize the epoch series as a series of lists
@@ -265,14 +269,16 @@ class SpectHRDataset:
             for idx in self.epoch.loc[(self.ecg.time >= start_time) & (self.ecg.time <= end_time)].index:
                 self.epoch.at[idx].append(epoch_name)
                 
-        self.epoch = self.epoch.apply(lambda x: [""] if isinstance(x, list) and not x else x)
+        #self.epoch = self.epoch.apply(lambda x: [""] if isinstance(x, list) and not x else x)
         self.unique_epochs = self.get_unique_epochs()
+
 
     def get_unique_epochs(self):
         """
         Returns a set of unique epoch names from the_epoch series.
         """        # Flatten all lists into one and find unique values
         all_epochs = [epoch for sublist in self.epoch.dropna() for epoch in sublist]
+        logger.info(all_epochs[31111])
         unique_epochs = set(all_epochs)
         unique_epochs.discard("")
         return unique_epochs

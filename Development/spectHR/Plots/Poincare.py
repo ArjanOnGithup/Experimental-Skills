@@ -38,7 +38,8 @@ def poincare(dataset):
 
     # Step 1: Preprocess the dataset
     # Create a deep copy of the RTops DataFrame to avoid modifying the original data
-    df = copy.deepcopy(dataset.RTops).dropna(subset=['epoch'])  # Drop rows with missing 'epoch'
+    df = dataset.RTops.dropna(subset=['epoch'])  # Drop rows with missing 'epoch'
+    df = df[df['epoch'].apply(lambda x: len(x) > 0)]
 
     # Validate the DataFrame structure
     required_columns = {'ibi', 'epoch', 'time'}
@@ -46,15 +47,6 @@ def poincare(dataset):
         raise ValueError("DataFrame must contain 'ibi', 'epoch', and 'time' columns.")
     if df.shape[0] < 2:
         raise ValueError("The DataFrame must have at least two rows for a Poincaré plot.")
-
-    # Ensure that 'epoch' is of string type for consistency
-    df['epoch'] = df['epoch'].astype(str)
-
-    # Step 2: Prepare the data
-    x = df['ibi'][:-1].values  # Current IBI (excluding the last row)
-    y = df['ibi'][1:].values   # Next IBI (excluding the first row)
-    epochs = df['epoch']       # Epoch column
-    times = df['time'][:-1].values  # Time of current IBIs
 
     # Initialize the figure and axes for the plot
     fig, ax = plt.subplots(figsize=(7, 7))
@@ -65,64 +57,75 @@ def poincare(dataset):
     ellipse_handles = {}
     global_indices = {}
 
-    # Retrieve unique epochs
-    unique_epochs = dataset.unique_epochs
-
     # Ensure 'active_epochs' exists; initialize it if not present
     if not hasattr(dataset, 'active_epochs'):
-        dataset.active_epochs = {epoch: True for epoch in unique_epochs}
+        dataset.active_epochs = {epoch: True for epoch in dataset.unique_epochs}
 
-    # Step 3: Plot scatter points and SD1/SD2 ellipses for each epoch
-    for epoch in sorted(unique_epochs):
-        visible = dataset.active_epochs[epoch]
+    filtered_by_epoch = {}
+    # Step 2: create the sets
+    for unique_epoch in dataset.unique_epochs:
+        # Create a mask for the current epoch
+        mask = [ unique_epoch in sublist for sublist in dataset.RTops.epoch ]    
+        # Subset dataset.RTops for the current epoch
+        filtered_by_epoch[unique_epoch] = dataset.RTops[mask]
 
-        # Create a boolean mask for the current epoch
-        mask = epochs.apply(lambda x: epoch in x)[:-1]  # Mask excludes the last row for consistency
-
-        # Scatter plot for current epoch
-        scatter = ax.scatter(x[mask], y[mask], label=epoch.title(), alpha=0.25)
-        scatter_handles[epoch] = scatter
-
-        # Compute SD1 and SD2 for the current epoch
-        _sd1 = np.std(np.subtract(x[mask], y[mask]) / np.sqrt(2))  # Perpendicular to line of identity
-        _sd2 = np.std(np.add(x[mask], y[mask]) / np.sqrt(2))       # Along the line of identity
-        ibm = np.mean(x[mask])  # Mean IBI
-        col = scatter.get_facecolor()  # Color of the scatter points
-
-        # Create an ellipse to represent SD1 and SD2 variability
-        ellipse = Ellipse(
-            (ibm, ibm), _sd1 * 2, _sd2 * 2, angle=-45,
-            linewidth=2, zorder=1, facecolor=col, edgecolor=col
-        )
-        ax.add_artist(ellipse)
-        ellipse_handles[epoch] = ellipse
-
-        # Set visibility based on 'active_epochs'
-        scatter.set_visible(visible)
-        ellipse.set_visible(visible)
-
-        # Store the global indices of points for hover functionality
-        global_indices[epoch] = np.where(mask)[0]
-
-    # Step 4: Add hover functionality using mplcursors
-    cursor = mplcursors.cursor(list(scatter_handles.values()), highlight=True, hover=False)
-    
+    # `filtered_by_epoch` now contains the filtered data for each unique epoch
     def on_hover(sel):
         """
         Display epoch and time information on hover.
-
+    
         Args:
             sel: The cursor selection event triggered by hovering.
         """
         scatter_idx = list(scatter_handles.values()).index(sel.artist)
         epoch = list(scatter_handles.keys())[scatter_idx]
-        global_idx = global_indices[epoch][sel.index]
-
-        # Update the annotation text with epoch and time information
-        sel.annotation.set_text(f"{epochs[global_idx]}\nTime: {round(times[global_idx], 2)}")
+    
+        # Get the x-value (IBI) of the hovered point
+        x_value = sel.artist.get_offsets()[sel.index, 0]  # x-coordinate (IBI value)
+        y_value = sel.artist.get_offsets()[sel.index, 1]  # x-coordinate (IBI value)
         
-    cursor.connect("add", on_hover)
+        # Get the DataFrame for the current epoch
+        data = filtered_by_epoch[epoch]
+    
+        # Find the index of the IBI value in the dataset, assuming 'ibi' is a column in 'data'
+        ibi_idx = (np.abs(data.ibi - x_value)).argmin()  # Find the closest IBI value
+        
+        # Get the time corresponding to that index
+        time_value = data.time.iloc[ibi_idx]
+    
+        # Update the annotation text with epoch and time information
+        sel.annotation.set_text(f"{epoch.title()}:\nIBI={x_value:.2f}-{y_value:.2f}ms\nTime={time_value:.2f}s")
+        
 
+    # Step 3: Plot scatter points and SD1/SD2 ellipses for each epoch
+    for epoch in sorted(dataset.unique_epochs):
+        visible = dataset.active_epochs[epoch]
+
+        data = filtered_by_epoch[epoch]
+        
+        x = data.ibi[:-1].reset_index(drop=True)
+        y = data.ibi[1:].reset_index(drop=True)
+        # Scatter plot for current epoch
+        scatter_handles[epoch] = ax.scatter(x, y, label=epoch.title(), alpha=0.2)
+        ibm = np.mean(x)  # Mean IBI
+        col = scatter_handles[epoch].get_facecolor()  # Color of the scatter points
+
+        # Create an ellipse to represent SD1 and SD2 variability
+        ellipse = Ellipse(
+            (ibm, ibm), sd1(data.ibi)/500, sd2(data.ibi)/500, angle=-45,
+            linewidth=1, zorder=1, facecolor=col, edgecolor='k', alpha=.35
+        )
+        ax.add_artist(ellipse)
+        ellipse_handles[epoch] = ellipse
+
+        # Set visibility based on 'active_epochs'
+        scatter_handles[epoch].set_visible(visible)
+        ellipse.set_visible(visible)
+
+    # Step 4: Add hover functionality using mplcursors
+    cursor= mplcursors.cursor([scatter for scatter in scatter_handles.values()], highlight=True, hover=False)
+    cursor.connect("add", on_hover)
+    
     # Step 5: Plot formatting
     ax.set_title('')
     ax.set_xlabel('IBI (ms)', fontsize=12)
@@ -162,7 +165,7 @@ def poincare(dataset):
             fig.canvas.draw_idle()
 
 
-    for epoch in sorted(unique_epochs, key=lambda v: v.upper()):
+    for epoch in sorted(dataset.unique_epochs, key=lambda v: v.upper()):
         checkbox = v.Checkbox(
             v_model=dataset.active_epochs[epoch],  # Bind checkbox value
             label=epoch,
