@@ -41,7 +41,7 @@ def HRApp(DataSet):
 
     tab_list = [v.Tab(children=['PreProcessing']),
         v.Tab(children=['Poincare']),
-        v.Tab(children=['Decriptives']),
+        v.Tab(children=['Descriptives']),
         v.Tab(children=['PSD']),
         v.Tab(children=['Epochs'])]
 
