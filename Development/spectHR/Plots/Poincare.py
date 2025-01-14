@@ -94,7 +94,7 @@ def poincare(dataset):
         time_value = data.time.iloc[ibi_idx]
     
         # Update the annotation text with epoch and time information
-        sel.annotation.set_text(f"{epoch.title()}:\nIBI={x_value:.2f}-{y_value:.2f}ms\nTime={time_value:.2f}s")
+        sel.annotation.set_text(f"{epoch.title()}:\nIBI={1000*x_value:.0f}-{1000*y_value:.0f}ms\nTime={time_value:.1f}s")
         
 
     # Step 3: Plot scatter points and SD1/SD2 ellipses for each epoch

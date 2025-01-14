@@ -1,16 +1,10 @@
 import spectHR as cs
-from ipywidgets import Tab, Output
+from ipywidgets import Tab, Output, VBox
 import ipyvuetify as v
 import pandas as pd
 import pyhrv
-'''
-tab_list = [v.Tab(children=['Tab ' + str(i)]) for i in range(1,4)]
-content_list = [v.TabItem(children=[lorum_ipsum]) for i in range(1,4)] 
-tabs = v.Tabs(
-    v_model=1, 
-    children=tab_list + content_list)
-tabs
-'''
+import os
+
 def HRApp(DataSet):
     """
     Creates an interactive Heart Rate Variability (HRV) analysis application using ipywidgets.
@@ -111,7 +105,36 @@ def HRApp(DataSet):
                     pd.set_option('display.precision', 8)  # Set display precision for DataFrame
                     DataSet.descriptives_Values = pd.merge(DataSet.descriptives_Values, df, on='epoch', how='outer')
                 
-                display(DataSet.descriptives_Values)  # Display the computed statistics
+                 # Output widget to display the table
+                table_output = Output()
+                with table_output:
+                    display(DataSet.descriptives_Values)  # Display the computed statistics
+                # Create a button to save the table as a CSV file
+                def save_to_csv(widget, event, data):
+                    csv_filename = os.path.splitext(DataSet.filename)[0] + ".csv"
+                    file_path = os.path.join(DataSet.datadir, csv_filename)
+                    csv_data = DataSet.descriptives_Values.copy()
+                    csv_data['source'] = os.path.splitext(DataSet.filename)[0]
+                    csv_data.to_csv(file_path, index=False)
+        
+                save_button = v.Btn(
+                    children=[
+                        v.Icon(left=True, children=["fa-file-csv"]),  # Add a suitable Font Awesome icon
+                        "Save as CSV"
+                    ],
+                    class_="ma-2",
+                    color="primary",
+                    outlined=True,
+                )
+                # Attach click event handler
+                save_button.on_event('click', save_to_csv)
+
+                # Combine the table and the button in a VBox
+                layout = VBox(children=[table_output, save_button])
+                
+                # Display the VBox
+                display(layout)
+                #display(DataSet.descriptives_Values)  # Display the computed statistics
                 
         if tab_index == 3:  # PSD tab selected
             with psdPlot:
