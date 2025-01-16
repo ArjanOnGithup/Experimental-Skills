@@ -12,19 +12,20 @@ dependencies:
   - ipyvuetify
   - ipywidgets
   - jupyter
-  - jupyterlab
+  - jupyterlab >=4.0.0
   - matplotlib
   - mplcursors
-  - numba
+  - nodejs >=20,<21
   - numpy
   - pandas
   - pip
-  - python
+  - python >=3.10
   - pyxdf  
   - scipy
   - voila
   - voila-gridstack
   - seaborn
+  - wheel
   - pip:
     - pyhrv
     - easywebdav
