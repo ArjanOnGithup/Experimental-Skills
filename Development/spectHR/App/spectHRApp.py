@@ -1,4 +1,5 @@
 import spectHR as cs
+from spectHR.Tools.Logger import logger
 from ipywidgets import Tab, Output, VBox
 import ipyvuetify as v
 import pandas as pd
@@ -119,8 +120,11 @@ def HRApp(DataSet):
                     columns = ['id'] + [col for col in csv_data.columns if col != 'id']
                     csv_data = csv_data[columns]
                     csv_data.to_csv(file_path, index=False)
+                    logger.info(f"CSV file written to {file_path}")
+                    # Create analysis helper if not there already:
+                    if not os.path.isfile('ReadData.R'):
                     # R code as a static string
-                    r_code = """
+                        r_code = """
 # Load necessary library
 library(dplyr)
 
@@ -144,12 +148,12 @@ combined_data <- bind_rows(lapply(csv_files, read_and_combine))
 # View the combined data
 print(combined_data)
 """
-                    
-                    # Write the R code to a file
-                    with open("ReadData.R", "w") as file:
-                        file.write(r_code)
-                    
-                    print("R code has been written to ReadData.R")
+                        
+                        # Write the R code to a file
+                        with open("ReadData.R", "w") as file:
+                            file.write(r_code)
+                        
+                        logger.info("R code has been written to ReadData.R")
         
                 save_button = v.Btn(
                     children=[
@@ -183,9 +187,10 @@ print(combined_data)
             with Gantt:
                 Gantt.clear_output()  # Clear previous content
                 display(cs.gantt(DataSet, labels=True))  # Display Gantt chart visualization
-        
-        # Save changes to the dataset after any tab interaction
-        DataSet.save()
+
+        if change['old'] in [1,2]:
+            # Save changes to the dataset after any tab interaction
+            DataSet.save()
     
     # Attach the tab change observer to the Tab widget
     App.observe(on_tab_change, 'v_model')

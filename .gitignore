@@ -11,3 +11,9 @@
 /Development/cache
 /Development/cache
 /Development/cache
+*.csv
+*.xdf
+/.virtual_documents
+/.virtual_documents/Development
+Development/spectHR/Tools/.ipynb_checkpoints/Logger-checkpoint.py
+.virtual_documents/Development/SpectHR.ipynb

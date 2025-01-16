@@ -173,16 +173,19 @@ class SpectHRDataset:
 
         # Identify ECG stream automatically if not provided
         if ecg_index is None:
-            ecg_index = next((i for i, d in enumerate(rawdata) if d['info']['name'][0].startswith('Polar')), None)
+            ecg_index = next((i for i, d in enumerate(rawdata) if d['info']['type'][0].startswith('ECG')), None)
             if ecg_index is None:
                 logger.info("There is no stream named 'Polar'")
 
         # Identify event stream automatically if not provided
         if event_index is None:
-            event_index = next((i for i, d in enumerate(rawdata) if d['info']['name'][0].startswith('TaskMarkers')), None)
+            event_index = [i for i, d in enumerate(rawdata) if 'Markers' in d['info']['type'][0]]
             if event_index is None:
-                logger.info("There is no stream named 'TaskMarkers'")
-                
+                logger.info("There is no stream named 'Markers'")
+            else:    
+                for index in event_index:
+                    d = rawdata[index]
+                    logger.info(f"EventStream {d['info']['name'][0]} found")               
         # Load ECG data
         if ecg_index is not None:
             ecg_timestamps = pd.Series(rawdata[ecg_index]["time_stamps"])
@@ -190,8 +193,9 @@ class SpectHRDataset:
             
             ecg_levels = pd.Series(rawdata[ecg_index]["time_series"].flatten())
             ecg_timestamps -= self.starttime
-            # pragmatic apprauch. Might do better. This flips the signal if it thinks it needs to...
-            if abs(np.mean(ecg_levels) - np.min(ecg_levels)) > (1.1* abs(np.mean(ecg_levels) - np.max(ecg_levels))): 
+            # pragmatic approuch. Might do better. This flips the signal if it thinks it needs to...
+            # logger.info(f'Flip at: {abs(np.mean(ecg_levels) - np.min(ecg_levels))/(abs(np.mean(ecg_levels) - np.max(ecg_levels))) } ')
+            if abs(np.mean(ecg_levels) - np.min(ecg_levels))/(abs(np.mean(ecg_levels) - np.max(ecg_levels))) < 1.25: 
                 logger.info('flipping the signal')
                 ecg_levels = -ecg_levels
             self.ecg = TimeSeries(ecg_timestamps, ecg_levels)
@@ -216,13 +220,18 @@ class SpectHRDataset:
 
         # Load event data
         if event_index is not None:
-            event_timestamps = pd.Series(rawdata[event_index]["time_stamps"])
-            event_labels = pd.Series(rawdata[event_index]["time_series"])
-            event_labels = event_labels.apply(lambda x: x[0])
-            self.events = pd.DataFrame({
-                'time': event_timestamps - self.starttime,
-                'label': event_labels
-            })
+            eventlist = []
+            for index in event_index:
+                event_timestamps = pd.Series(rawdata[index]["time_stamps"])
+                event_labels = pd.Series(rawdata[index]["time_series"])
+                event_labels = event_labels.apply(lambda x: x[0])
+            
+                ievents = pd.DataFrame({
+                    'time': event_timestamps - self.starttime,
+                    'label': event_labels
+                })
+                eventlist.append(ievents)
+            self.events = pd.concat(eventlist, ignore_index=True)
             self.create_epoch_series()
             
     def log_error(message):
