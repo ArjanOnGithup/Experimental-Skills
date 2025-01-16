@@ -14,7 +14,7 @@ dependencies:
   - jupyterlab >=4.0.0
   - matplotlib
   - mplcursors
-  - nodejs >=20,<21
+  - nodejs
   - numpy
   - pandas
   - pip
