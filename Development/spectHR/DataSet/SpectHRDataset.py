@@ -195,9 +195,13 @@ class SpectHRDataset:
             ecg_timestamps -= self.starttime
             # pragmatic approuch. Might do better. This flips the signal if it thinks it needs to...
             # logger.info(f'Flip at: {abs(np.mean(ecg_levels) - np.min(ecg_levels))/(abs(np.mean(ecg_levels) - np.max(ecg_levels))) } ')
-            if abs(np.mean(ecg_levels) - np.min(ecg_levels))/(abs(np.mean(ecg_levels) - np.max(ecg_levels))) < 1.25: 
-                logger.info('flipping the signal')
+            magic = abs(np.mean(ecg_levels) - np.min(ecg_levels))/(abs(np.mean(ecg_levels) - np.max(ecg_levels)))
+            if magic > 1.5: 
+                logger.info(f'Flipping the signal as the magic value is now {magic}')
                 ecg_levels = -ecg_levels
+            else:
+                logger.info(f'Not flipping the signal as the magic value is now {magic}')
+
             self.ecg = TimeSeries(ecg_timestamps, ecg_levels)
 
         # Load breathing data

@@ -188,7 +188,7 @@ def welch_psd(Dataset, interpolate = True, fs=4, logscale = False,  nperseg=256,
     plt.legend(loc='upper right')
     
     # Ensure the axes starts at 0
-    plt.xlim(left = 0,  right = .5)
+    plt.xlim(left = 0,  right = .4)
     plt.ylim(bottom = 0)
     
     if logscale:
