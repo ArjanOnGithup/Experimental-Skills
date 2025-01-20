@@ -276,7 +276,6 @@ class SpectHRDataset:
             for idx in self.epoch.loc[(self.ecg.time >= start_time) & (self.ecg.time <= end_time)].index:
                 self.epoch.at[idx].append(epoch_name)
                 
-        #self.epoch = self.epoch.apply(lambda x: [""] if isinstance(x, list) and not x else x)
         self.unique_epochs = self.get_unique_epochs()
 
 
