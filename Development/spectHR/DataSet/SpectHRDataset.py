@@ -87,7 +87,7 @@ class SpectHRDataset:
         log_action(action_name, params):
             Logs an action with its parameters into the dataset history.
     """
-    def __init__(self, filename, ecg_index=None, br_index=None, event_index=None, par=None, reset = False, use_webdav = False):
+    def __init__(self, filename, ecg_index=None, br_index=None, event_index=None, par=None, reset = False, use_webdav = False, flip = False):
         """
         Initializes the SpectHRDataset by loading data from a file.
 
@@ -131,7 +131,7 @@ class SpectHRDataset:
             self.load_from_pickle()
         elif Path(self.file_path).exists():
             logger.info(f"Loading dataset from XDF: {self.file_path}")
-            self.loadData(self.file_path, ecg_index, br_index, event_index)
+            self.loadData(self.file_path, ecg_index, br_index, event_index, flip=flip)
             self.save()
         else:
             logger.error(f"File {self.file_path} was not found")
@@ -159,7 +159,7 @@ class SpectHRDataset:
         except Exception as e:
             logger.error(f"Failed to load pickle file: {e}")
             
-    def loadData(self, filename, ecg_index=None, br_index=None, bp_index=None, event_index=None):
+    def loadData(self, filename, ecg_index=None, br_index=None, bp_index=None, event_index=None, flip = 'auto'):
         """
         Loads data from an XDF file into the dataset.
 
@@ -171,21 +171,18 @@ class SpectHRDataset:
         """
         rawdata, _ = pyxdf.load_xdf(filename)
 
-        # Identify ECG stream automatically if not provided
+        # Identify ECG stream automatically if not provided: 
         if ecg_index is None:
-            ecg_index = next((i for i, d in enumerate(rawdata) if d['info']['type'][0].startswith('ECG')), None)
+            ecg_index = next((i for i, d in enumerate(rawdata) if d['info']['type'][0].startswith('ECG') and d['info']['effective_srate'] > 0 ), None)
             if ecg_index is None:
                 logger.info("There is no stream named 'Polar'")
 
         # Identify event stream automatically if not provided
         if event_index is None:
-            event_index = [i for i, d in enumerate(rawdata) if 'Markers' in d['info']['type'][0]]
+            event_index = [i for i, d in enumerate(rawdata) if 'Markers' in d['info']['type']]
             if event_index is None:
                 logger.info("There is no stream named 'Markers'")
-            else:    
-                for index in event_index:
-                    d = rawdata[index]
-                    logger.info(f"EventStream {d['info']['name'][0]} found")               
+                    
         # Load ECG data
         if ecg_index is not None:
             ecg_timestamps = pd.Series(rawdata[ecg_index]["time_stamps"])
@@ -194,13 +191,9 @@ class SpectHRDataset:
             ecg_levels = pd.Series(rawdata[ecg_index]["time_series"].flatten())
             ecg_timestamps -= self.starttime
             # pragmatic approuch. Might do better. This flips the signal if it thinks it needs to...
-            # logger.info(f'Flip at: {abs(np.mean(ecg_levels) - np.min(ecg_levels))/(abs(np.mean(ecg_levels) - np.max(ecg_levels))) } ')
             magic = abs(np.mean(ecg_levels) - np.min(ecg_levels))/(abs(np.mean(ecg_levels) - np.max(ecg_levels)))
-            if magic > 1.5: 
-                logger.info(f'Flipping the signal as the magic value is now {magic}')
+            if (magic > 1.5 and flip == 'auto') or flip == True: 
                 ecg_levels = -ecg_levels
-            else:
-                logger.info(f'Not flipping the signal as the magic value is now {magic}')
 
             self.ecg = TimeSeries(ecg_timestamps, ecg_levels)
 
@@ -225,6 +218,7 @@ class SpectHRDataset:
         # Load event data
         if event_index is not None:
             eventlist = []
+            logger.info(f'event_index: {event_index}')
             for index in event_index:
                 event_timestamps = pd.Series(rawdata[index]["time_stamps"])
                 event_labels = pd.Series(rawdata[index]["time_series"])

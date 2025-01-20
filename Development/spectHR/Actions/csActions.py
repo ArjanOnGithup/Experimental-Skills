@@ -99,7 +99,6 @@ def filterECGData(DataSet, par=None):
         'channel': 'ecg',
         'filterType': 'highpass',  # Example: filter type (lowpass, highpass)
         'cutoff': .1,               # Hz: Cutoff frequency for the filter
-        'order': 8,               # Filter order
         'fSample': DataSet.ecg.srate            # Sampling frequency (Hz)
     }
 
@@ -114,14 +113,21 @@ def filterECGData(DataSet, par=None):
 
     # Apply the filter using SciPy's signal package
     nyquist = 0.5 * par['fSample']
-    normal_cutoff = par['cutoff'] / nyquist
+    normal_cutoff = par['cutoff'] / nyquist 
+    
+    passband = normal_cutoff * 1.1
+    stopband = normal_cutoff / 1.5
 
+    N, wn = signal.buttord(passband, stopband, 3,40)
+    logger.info(f'creating a filter with order {N} , passband at {passband*nyquist}')
     # Example: lowpass or highpass filter
     if par['filterType'] == 'lowpass':
-        b, a = signal.butter(par['order'], normal_cutoff, btype='low', analog=False)
+        #b, a = signal.butter(par['order'], normal_cutoff, btype='low', analog=False)
+        b, a = signal.butter(N, wn, btype='low', analog=False)
     elif par['filterType'] == 'highpass':
-        b, a = signal.butter(par['order'], normal_cutoff, btype='high', analog=False)
-
+        #b, a = signal.butter(par['order'], normal_cutoff, btype='high', analog=False)
+        b, a = signal.butter(N, wn, btype='high', analog=False)
+        
     channel = par['channel']
     # Apply the filter to the signal
     if channel == 'ecg':
