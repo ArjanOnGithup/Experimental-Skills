@@ -40,7 +40,10 @@ def gantt(dataset, labels=True):
     logger.info(f'Visible epochs: {list(visible_epochs.keys())}')
     
     # Filter the RTops DataFrame: Keep rows containing at least one visible epoch
-    RTops["filtered_epoch"] = RTops["epoch"].apply(lambda x: [e for e in x if e in visible_epochs])
+    RTops["filtered_epoch"] = RTops["epoch"].apply(
+        lambda x: [e for e in x if e in visible_epochs] if x is not None else []
+    )
+    
     RTops = RTops[RTops["filtered_epoch"].str.len() > 0]  # Remove rows with no visible epochs
     
     # Flatten the filtered epochs list for easier plotting

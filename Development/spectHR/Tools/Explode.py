@@ -41,8 +41,14 @@ def explode(DataSet):
     
     filtered_data = DataSet.RTops.copy()
     filtered_data = filtered_data[
-        filtered_data['epoch'].apply(lambda epochs: any(epoch in visible_epochs for epoch in epochs))
+        filtered_data['epoch'].apply(
+            lambda epochs: any(epoch in visible_epochs if visible_epochs is not None else False for epoch in epochs)
+            if epochs is not None else False
+        )
     ]
+    #filtered_data = filtered_data[
+    #    filtered_data['epoch'].apply(lambda epochs: any(epoch in visible_epochs if visible_epochs is not None else False for epoch in epochs))
+    #]
     
     # Step 3: Clean and explode the 'epoch' column
     filtered_data['epoch'] = filtered_data['epoch'].apply(filter_visible_epochs)  # Keep only visible epochs

@@ -65,7 +65,7 @@ def poincare(dataset):
     # Step 2: create the sets
     for unique_epoch in dataset.unique_epochs:
         # Create a mask for the current epoch
-        mask = [ unique_epoch in sublist for sublist in dataset.RTops.epoch ]    
+        mask = [ unique_epoch in sublist if sublist is not None else False for sublist in dataset.RTops.epoch ]    
         # Subset dataset.RTops for the current epoch
         filtered_by_epoch[unique_epoch] = dataset.RTops[mask]
 
