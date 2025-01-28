@@ -1,0 +1,8 @@
+README.md
+pyproject.toml
+spectHR/__init__.py
+spectHR.egg-info/PKG-INFO
+spectHR.egg-info/SOURCES.txt
+spectHR.egg-info/dependency_links.txt
+spectHR.egg-info/requires.txt
+spectHR.egg-info/top_level.txt

@@ -1,2 +1,3 @@
 - implement 'find'. Select part of the data while dragging, and the do the peakfinding and the interpolation there.
 - binderhub persistent storage
+- pyproject.toml

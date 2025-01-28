@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = { find = {} }
+
+[project]
+name = "spectHR"
+version = "0.1.0"
+description = "HRApp: An Interactive Heart Rate Variability (HRV) Analysis Tool"
+readme = "README.md"
+license = {text = "GPL-2.0-only"}
+authors = [
+    { name = "Mark Span", email = "m.m.span@rug.nl" },
+]
+requires-python = ">=3.10"
+dependencies = [
+    "ipython",
+    "ipympl",
+    "ipyvuetify",
+    "ipywidgets",
+    "jupyter",
+    "jupyterlab >= 4.0.0",
+    "matplotlib",
+    "mplcursors",
+    "numpy",
+    "pandas",
+    "pyxdf",
+    "scipy",
+    "seaborn",
+    "wheel",
+    "pyhrv",
+    "easywebdav",
+]
+
+[project.urls]
+Homepage = "https://github.com/ArjanOnGithup/Experimental-Skills"

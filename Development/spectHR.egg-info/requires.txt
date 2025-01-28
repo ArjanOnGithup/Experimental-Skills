@@ -1,0 +1,16 @@
+ipython
+ipympl
+ipyvuetify
+ipywidgets
+jupyter
+jupyterlab>=4.0.0
+matplotlib
+mplcursors
+numpy
+pandas
+pyxdf
+scipy
+seaborn
+wheel
+pyhrv
+easywebdav
