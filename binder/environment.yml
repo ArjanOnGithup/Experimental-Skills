@@ -25,20 +25,13 @@ dependencies:
   - voila-gridstack
   - seaborn
   - wheel
-  - r-base=4.1.0
+  - r-base
   - r-tidyverse
   - r-essentials
   - r-irkernel
-  - r-rcpp
-  - r-rcurl
-  - r-rmarkdown
   - r-dplyr
-  - r-ggplot2
-  - r-tidyr
-  - rstudio
-  - r-plotly
   - nb_conda_kernels
-  - spectHR
   - pip:
     - pyhrv
+    - spectHR
     - easywebdav
