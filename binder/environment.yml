@@ -38,6 +38,7 @@ dependencies:
   - rstudio
   - r-plotly
   - nb_conda_kernels
+  - spectHR
   - pip:
     - pyhrv
     - easywebdav
