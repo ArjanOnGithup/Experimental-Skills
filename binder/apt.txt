@@ -1,2 +1,3 @@
 msttcorefonts
 font-manager
+mc
