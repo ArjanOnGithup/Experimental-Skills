@@ -1,3 +1,4 @@
 msttcorefonts
 font-manager
 mc
+git
