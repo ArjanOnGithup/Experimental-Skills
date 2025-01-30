@@ -5,7 +5,6 @@ channels:
 dependencies:
   - conda
   - conda-pack
-  - gdown
   - ipython
   - ipympl
   - ipyvuetify
@@ -14,30 +13,21 @@ dependencies:
   - jupyterlab >=4.0.0
   - matplotlib
   - mplcursors
-  - nodejs >=20,<21
   - numpy
   - pandas
   - pip
   - python >=3.10
-  - pyxdf  
   - scipy
   - voila
   - voila-gridstack
   - seaborn
   - wheel
-  - r-base=4.1.0
+  - r-base
   - r-tidyverse
   - r-essentials
   - r-irkernel
-  - r-rcpp
-  - r-rcurl
-  - r-rmarkdown
   - r-dplyr
-  - r-ggplot2
-  - r-tidyr
-  - rstudio
-  - r-plotly
   - nb_conda_kernels
   - pip:
-    - pyhrv
-    - easywebdav
+    - spectHR==0.1.3
+
