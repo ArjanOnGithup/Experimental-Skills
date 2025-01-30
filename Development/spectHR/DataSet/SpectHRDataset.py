@@ -124,7 +124,13 @@ class SpectHRDataset:
         if use_webdav:
             if not Path(self.file_path).exists():
                 copyWebdav(self.file_path)
-
+                
+        extension = os.path.splitext(filename)[1][1:]
+        if extension == 'txt':
+            logger.info(f"Loading dataset from raw set: {self.file_path}")
+            
+            return
+            
         # Load data from pickle if available; otherwise, process the XDF file
         if Path(self.pkl_path).exists() and not reset:
             logger.info(f"Loading dataset from pickle: {self.pkl_path}")
