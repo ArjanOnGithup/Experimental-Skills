@@ -29,5 +29,5 @@ dependencies:
   - r-dplyr
   - nb_conda_kernels
   - pip:
-    - spectHR==0.1.5.dev0
+    - spectHR==0.1.7.dev0
 
