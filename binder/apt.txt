@@ -2,3 +2,4 @@ msttcorefonts
 font-manager
 mc
 git
+pandoc
