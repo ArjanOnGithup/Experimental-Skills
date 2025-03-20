@@ -1,4 +1,4 @@
-name: spectHRs
+name: spectHR
 channels:
   - conda-forge
   - anaconda
@@ -22,11 +22,6 @@ dependencies:
   - voila-gridstack
   - seaborn
   - wheel
-  - r-base
-  - r-tidyverse
-  - r-essentials
-  - r-irkernel
-  - r-dplyr
   - nb_conda_kernels
   - pip:
     - spectHR==0.1.8
