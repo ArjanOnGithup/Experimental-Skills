@@ -23,6 +23,4 @@ dependencies:
   - seaborn
   - wheel
   - nb_conda_kernels
-  - pip:
-    - spectHR==0.1.8
 
